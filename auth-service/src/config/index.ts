@@ -11,6 +11,7 @@ if (env === 'test') {
 }
 
 export const config = {
-  mongoURL: process.env.MONGO_URL,
+  mongoURI: process.env.MONGO_URI,
   port: process.env.PORT || 3000,
+  dbName: process.env.DB_NAME,
 };
