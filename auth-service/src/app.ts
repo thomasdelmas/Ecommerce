@@ -1,5 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import http from 'http';
 import { config } from './config/index.js';
 import { UserSchema } from './models/user.js';
 import { IDBConn } from './types/db.js';
@@ -7,22 +8,15 @@ import { IUser } from './types/user.js';
 
 export class App {
   app: express.Application;
+  server: http.Server | null = null;
 
   constructor() {
     this.app = express();
   }
 
-  start = async () => {
+  connectDBWithRetry = async (uri: string, count: number): Promise<void> => {
     try {
-      if (!config.mongoURL) {
-        throw new Error('MongoDB URI is undefined');
-      }
-
-      if (!config.port) {
-        throw new Error('Port is undefined');
-      }
-
-      await mongoose.connect(config.mongoURL, {
+      await mongoose.connect(uri, {
         dbName: 'AuthDB',
         serverSelectionTimeoutMS: 5000,
       });
@@ -32,18 +26,63 @@ export class App {
       if (e instanceof Error) {
         console.log(`Error connecting to MongoDB: ${e.message}`);
       }
+
+      if (count - 1 > 0) {
+        console.log('Retrying in 3 seconds...');
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        await this.connectDBWithRetry(uri, count - 1);
+      } else {
+        throw new Error('Failed to connect to MongoDB.');
+      }
     }
+  };
 
-    const db = mongoose.model<IUser, IDBConn>('Users', UserSchema);
+  start = async () => {
+    try {
+      if (!config.mongoURI) {
+        throw new Error('MongoDB URI is undefined');
+      }
 
-    if (db) {
-      this.app.get('/', (req: express.Request, res: express.Response) => {
-        res.status(200).json({ status: 'ok' });
-      });
+      if (!config.port) {
+        throw new Error('Port is undefined');
+      }
 
-      this.app.listen(config.port, () =>
-        console.log(`Auth service running on port ${config.port}`),
+      if (!config.dbName) {
+        throw new Error('DB Name is undefined');
+      }
+
+      this.server = this.app.listen(config.port, () =>
+        console.log(`Server started on port ${config.port}`),
       );
+
+      await this.connectDBWithRetry(config.mongoURI, 3);
+
+      const db = mongoose.model<IUser, IDBConn>('Users', UserSchema);
+
+      if (db) {
+        this.app.get('/', (req: express.Request, res: express.Response) => {
+          res.status(200).json({ status: 'ok' });
+        });
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        console.log(e.message);
+      }
+      this.stop();
+    }
+  };
+
+  disconnectDB = async () => {
+    await mongoose.disconnect();
+    console.log('MongoDB disconnected');
+  };
+
+  stop = async () => {
+    await this.disconnectDB();
+    if (this.server) {
+      this.server.close();
+      console.log('Server stopped');
     }
   };
 }
