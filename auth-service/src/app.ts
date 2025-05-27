@@ -14,10 +14,14 @@ export class App {
     this.app = express();
   }
 
-  connectDBWithRetry = async (uri: string, count: number): Promise<void> => {
+  connectDBWithRetry = async (
+    uri: string,
+    dbName: string,
+    count: number,
+  ): Promise<void> => {
     try {
       await mongoose.connect(uri, {
-        dbName: 'AuthDB',
+        dbName: dbName,
         serverSelectionTimeoutMS: 5000,
       });
 
@@ -31,7 +35,7 @@ export class App {
         console.log('Retrying in 3 seconds...');
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
-        await this.connectDBWithRetry(uri, count - 1);
+        await this.connectDBWithRetry(uri, dbName, count - 1);
       } else {
         throw new Error('Failed to connect to MongoDB.');
       }
@@ -56,7 +60,7 @@ export class App {
         console.log(`Server started on port ${config.port}`),
       );
 
-      await this.connectDBWithRetry(config.mongoURI, 3);
+      await this.connectDBWithRetry(config.mongoURI, config.dbName, 3);
 
       const db = mongoose.model<IUser, IDBConn>('Users', UserSchema);
 
