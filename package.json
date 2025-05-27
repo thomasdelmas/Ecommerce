@@ -1,0 +1,12 @@
+{
+  "name": "ecommerce",
+  "version": "1.0.0",
+  "description": "Scalable e-commerce platform. Manages user registration, login, JWT token, authentication, retrieve products, place orders, queues, ORM, NoSQL, SQL.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
