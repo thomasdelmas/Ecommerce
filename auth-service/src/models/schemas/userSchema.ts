@@ -1,4 +1,4 @@
-import { IUser } from '../types/user.js';
+import { IUser } from '../../types/user.js';
 import mongoose from 'mongoose';
 
 export const UserSchema = new mongoose.Schema<IUser>({
