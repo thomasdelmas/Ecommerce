@@ -2,9 +2,6 @@ import express from 'express';
 import mongoose from 'mongoose';
 import http from 'http';
 import { config } from './config/index.js';
-import { UserSchema } from './models/user.js';
-import { IDBConn } from './types/db.js';
-import { IUser } from './types/user.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
@@ -15,6 +12,7 @@ export class App {
   constructor() {
     this.app = express();
     this.configureMiddleware();
+    this.configureRoutes();
   }
 
   configureMiddleware = () => {
@@ -23,6 +21,12 @@ export class App {
     }
     this.app.use(bodyParser.json());
     this.app.use(cors({ origin: config.allowedOrigins }));
+  };
+
+  configureRoutes = () => {
+    this.app.get('/', (req: express.Request, res: express.Response) => {
+      res.status(200).json({ status: 'ok' });
+    });
   };
 
   connectDBWithRetry = async (
@@ -72,14 +76,6 @@ export class App {
       );
 
       await this.connectDBWithRetry(config.mongoURI, config.dbName, 3);
-
-      const db = mongoose.model<IUser, IDBConn>('Users', UserSchema);
-
-      if (db) {
-        this.app.get('/', (req: express.Request, res: express.Response) => {
-          res.status(200).json({ status: 'ok' });
-        });
-      }
     } catch (e) {
       if (e instanceof Error) {
         console.log(e.message);
