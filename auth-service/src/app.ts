@@ -5,6 +5,8 @@ import { config } from './config/index.js';
 import { UserSchema } from './models/user.js';
 import { IDBConn } from './types/db.js';
 import { IUser } from './types/user.js';
+import cors from 'cors';
+import bodyParser from 'body-parser';
 
 export class App {
   app: express.Application;
@@ -12,7 +14,16 @@ export class App {
 
   constructor() {
     this.app = express();
+    this.configureMiddleware();
   }
+
+  configureMiddleware = () => {
+    if (!config.allowedOrigins) {
+      console.warn('No allowed cross-origin configured');
+    }
+    this.app.use(bodyParser.json());
+    this.app.use(cors({ origin: config.allowedOrigins }));
+  };
 
   connectDBWithRetry = async (
     uri: string,

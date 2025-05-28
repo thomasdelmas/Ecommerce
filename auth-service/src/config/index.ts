@@ -14,4 +14,5 @@ export const config = {
   mongoURI: process.env.MONGO_URI,
   port: process.env.PORT || 3000,
   dbName: process.env.DB_NAME,
+  allowedOrigins: process.env.ALLOWED_ORIGINS,
 };
