@@ -3,7 +3,7 @@ import { IUser } from '../types/user.js';
 import { IDBConn } from '../types/db.js';
 
 export type IUserRepository = {
-  createUser: (user: IUser, db: IDBConn) => Promise<HydratedDocument<IUser>>;
+  createUser: (user: IUser, db: IDBConn) => Promise<HydratedDocument<IUser> | null>;
   getUserByUsername: (
     username: IUser['username'],
     db: IDBConn,

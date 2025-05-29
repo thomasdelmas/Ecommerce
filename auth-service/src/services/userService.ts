@@ -9,7 +9,7 @@ export type IUserService = {
     username: string,
     password: string,
     db: IDBConn,
-  ) => Promise<HydratedDocument<IUser>>;
+  ) => Promise<HydratedDocument<IUser> | null>;
   findUserByUsername: (
     username: string,
     db: IDBConn,
@@ -20,13 +20,20 @@ export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
 
   register = async (username: string, password: string, db: IDBConn) => {
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(password, salt);
+		const salt = bcrypt.genSaltSync(10);
+		const hash = bcrypt.hashSync(password, salt);
 
-    return await this.userRepository.createUser(
-      { username: username, password: hash, role: '' },
-      db,
-    );
+		const user = await this.userRepository.createUser(
+			{ username: username, password: hash, role: '' },
+			db,
+		);
+
+		if (!user) {
+			console.warn(`User creation failed for username: ${username}`);
+			return null;
+		}
+
+		return user;
   };
 
   findUserByUsername = async (username: string, db: IDBConn) => {
