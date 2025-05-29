@@ -1,8 +1,8 @@
 import { HydratedDocument } from 'mongoose';
-import { IDBConn } from '../types/db';
-import { IUser } from '../types/user';
+import { IDBConn } from '../types/db.js';
+import { IUser } from '../types/user.js';
 import bcrypt from 'bcryptjs';
-import { IUserRepository } from '../repositories/userRepository';
+import { IUserRepository } from '../repositories/userRepository.js';
 
 export type IUserService = {
   register: (

@@ -1,6 +1,6 @@
 import { HydratedDocument } from 'mongoose';
-import { IUser } from '../types/user';
-import { IDBConn } from '../types/db';
+import { IUser } from '../types/user.js';
+import { IDBConn } from '../types/db.js';
 
 export type IUserRepository = {
   createUser: (user: IUser, db: IDBConn) => Promise<HydratedDocument<IUser>>;

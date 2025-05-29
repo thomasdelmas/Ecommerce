@@ -1,6 +1,6 @@
 import express from 'express';
-import { IDBConn } from '../types/db';
-import { IUserService } from '../services/userService';
+import { IDBConn } from '../types/db.js';
+import { IUserService } from '../services/userService.js';
 
 export type RegisterRequest = {
   username: string;
