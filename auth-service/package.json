@@ -7,8 +7,8 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc && node dist/index.js",
-    "test": "cross-env NODE_ENV=test jest",
-	"coverage": "jest --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
+    "test": "cross-env NODE_ENV=test jest --silent",
+	"coverage": "cross-env NODE_ENV=test jest --silent --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
     "lint": "eslint . --ext .ts",
     "lintFix": "eslint . --ext .ts --fix",
     "format": "prettier --write ."
