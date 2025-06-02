@@ -20,23 +20,28 @@ export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
 
   register = async (username: string, password: string, db: IDBConn) => {
-		const salt = bcrypt.genSaltSync(10);
-		const hash = bcrypt.hashSync(password, salt);
+    try {
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(password, salt);
 
-		const user = await this.userRepository.createUser(
-			{ username: username, password: hash, role: '' },
-			db,
-		);
+      const newUsers = await this.userRepository.createUsers(
+        [{ username: username, password: hash, role: '' }],
+        db,
+      );
 
-		if (!user) {
-			console.warn(`User creation failed for username: ${username}`);
-			return null;
-		}
-
-		return user;
+      return newUsers[0];
+    } catch (err) {
+      console.error('Error in register:', err);
+      return null;
+    }
   };
 
   findUserByUsername = async (username: string, db: IDBConn) => {
-    return await this.userRepository.getUserByUsername(username, db);
+    try {
+      return await this.userRepository.getUserByUsername(username, db);
+    } catch (err) {
+      console.error('Error in findUserByUsername:', err);
+      return null;
+    }
   };
 }

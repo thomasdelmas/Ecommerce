@@ -3,19 +3,26 @@ import { IUser } from '../types/user.js';
 import { IDBConn } from '../types/db.js';
 
 export type IUserRepository = {
-  createUser: (user: IUser, db: IDBConn) => Promise<HydratedDocument<IUser> | null>;
+  createUsers: (
+    user: IUser[],
+    db: IDBConn,
+  ) => Promise<HydratedDocument<IUser>[]>;
   getUserByUsername: (
     username: IUser['username'],
     db: IDBConn,
-  ) => Promise<HydratedDocument<IUser> | null>;
+  ) => Promise<HydratedDocument<IUser>>;
 };
 
 export class UserRepository implements IUserRepository {
-  createUser = async (user: IUser, db: IDBConn) => {
-    return await db.create(user);
+  createUsers = async (users: IUser[], db: IDBConn) => {
+    return await db.create(users);
   };
 
   getUserByUsername = async (username: IUser['username'], db: IDBConn) => {
-    return await db.findOne({ username });
+    const user = await db.findOne({ username });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
   };
 }
