@@ -1,9 +1,8 @@
-// eslint.config.js
-const { defineConfig } = require('eslint/config');
-const ts = require('@typescript-eslint/eslint-plugin');
-const parser = require('@typescript-eslint/parser');
+import { defineConfig } from 'eslint/config';
+import ts from '@typescript-eslint/eslint-plugin';
+import parser from '@typescript-eslint/parser';
 
-module.exports = defineConfig([
+export default defineConfig([
   {
     files: ['**/*.ts'],
     ignores: ['node_modules', 'dist'],
