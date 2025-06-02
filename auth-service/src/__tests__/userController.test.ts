@@ -29,7 +29,7 @@ describe('UserController - register', () => {
     res = {
       json: jest.fn().mockReturnThis(),
       status: jest.fn().mockReturnThis(),
-    } as unknown as Response;;
+    } as unknown as Response;
 
     db = {} as IDBConn;
   });
@@ -37,7 +37,7 @@ describe('UserController - register', () => {
   it('should create user successfully', async () => {
     userServiceMock.findUserByUsername.mockResolvedValue(null);
     userServiceMock.register.mockResolvedValue({
-			_id: 'someid',
+      _id: 'someid',
       username: 'testuser',
       password: 'hashedpass',
       role: '',
@@ -45,8 +45,15 @@ describe('UserController - register', () => {
 
     await controller.register(req as Request, res as Response, db);
 
-    expect(userServiceMock.findUserByUsername).toHaveBeenCalledWith('testuser', db);
-    expect(userServiceMock.register).toHaveBeenCalledWith('testuser', 'testpass', db);
+    expect(userServiceMock.findUserByUsername).toHaveBeenCalledWith(
+      'testuser',
+      db,
+    );
+    expect(userServiceMock.register).toHaveBeenCalledWith(
+      'testuser',
+      'testpass',
+      db,
+    );
     expect(res.json).toHaveBeenCalledWith({ message: 'Created user testuser' });
   });
 
@@ -61,7 +68,9 @@ describe('UserController - register', () => {
     await controller.register(req as Request, res as Response, db);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ message: 'Username already taken' });
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Username already taken',
+    });
   });
 
   it('should return error if registration fails', async () => {
@@ -71,7 +80,9 @@ describe('UserController - register', () => {
     await controller.register(req as Request, res as Response, db);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ message: 'Could not register user' });
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Could not register user',
+    });
   });
 
   it('should handle service errors gracefully', async () => {
