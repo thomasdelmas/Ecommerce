@@ -20,32 +20,31 @@ jest.mock('../controllers/userController', () => {
   };
 });
 
-import { App } from '../app';
-
 jest.mock('../models/init', () => ({
   models: {
     user: {},
   },
 }));
 
-jest.mock('../config/index', () => ({
+jest.mock('../config', () => ({
   config: {
     mongoURI: 'mongodb://localhost:27017/test',
-    port: 3001,
-    dbName: 'test-db',
-    allowedOrigins: ['http://localhost'],
+    port: 3000,
+    dbName: 'testdb',
+    allowedOrigins: '*',
   },
 }));
 
-jest.mock('mongoose', () => ({
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-}));
+import { App } from '../app';
+import { config } from '../config';
+
+const originalConfig = { ...config };
 
 describe('App', () => {
   let appInstance: App;
 
   beforeEach(() => {
+    Object.assign(config, originalConfig);
     appInstance = new App();
   });
 
@@ -54,6 +53,71 @@ describe('App', () => {
       await appInstance.stop();
     }
     jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  describe('App config vars', () => {
+    let app: App;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      app = new App();
+    });
+
+    it('should call console.warn if allowedOrigins is undefined', async () => {
+      config.allowedOrigins = undefined as any;
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const appInstance = new App();
+      await appInstance.start();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        'No allowed cross-origin configured',
+      );
+      await appInstance.stop();
+    });
+
+    it('should throw if mongoURI is undefined', async () => {
+      config.mongoURI = undefined as any;
+      const stopSpy = jest
+        .spyOn(app, 'stop')
+        .mockImplementation(async () => {});
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      await app.start();
+
+      expect(logSpy).toHaveBeenCalledWith('MongoDB URI is undefined');
+      expect(stopSpy).toHaveBeenCalled();
+    });
+
+    it('should throw if port is undefined', async () => {
+      config.mongoURI = 'mongodb://localhost:27017/test';
+      config.port = undefined as any;
+      const stopSpy = jest
+        .spyOn(app, 'stop')
+        .mockImplementation(async () => {});
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      await app.start();
+
+      expect(logSpy).toHaveBeenCalledWith('Port is undefined');
+      expect(stopSpy).toHaveBeenCalled();
+    });
+
+    it('should throw if dbName is undefined', async () => {
+      config.mongoURI = 'mongodb://localhost:27017/test';
+      config.port = 3000;
+      config.dbName = undefined as any;
+      const stopSpy = jest
+        .spyOn(app, 'stop')
+        .mockImplementation(async () => {});
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      await app.start();
+
+      expect(logSpy).toHaveBeenCalledWith('DB Name is undefined');
+      expect(stopSpy).toHaveBeenCalled();
+    });
   });
 
   describe('Middleware & Routes', () => {
@@ -72,13 +136,11 @@ describe('App', () => {
 
       const appInstance = new App(mockController);
 
-      const res = await request(appInstance.app)
-        .post('/register')
-        .send({
-          username: 'test@example.com',
-          password: '123456D',
-          confirmPassword: '123456D',
-        });
+      const res = await request(appInstance.app).post('/register').send({
+        username: 'test@example.com',
+        password: '123456D',
+        confirmPassword: '123456D',
+      });
 
       expect(res.status).toBe(201);
       expect(registerMock).toHaveBeenCalled();
