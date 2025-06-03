@@ -10,7 +10,7 @@ export type IUserRepository = {
   getUserByUsername: (
     username: IUser['username'],
     db: IDBConn,
-  ) => Promise<HydratedDocument<IUser>>;
+  ) => Promise<HydratedDocument<IUser> | null>;
 };
 
 export class UserRepository implements IUserRepository {
@@ -20,9 +20,6 @@ export class UserRepository implements IUserRepository {
 
   getUserByUsername = async (username: IUser['username'], db: IDBConn) => {
     const user = await db.findOne({ username });
-    if (!user) {
-      throw new Error('User not found');
-    }
     return user;
   };
 }
