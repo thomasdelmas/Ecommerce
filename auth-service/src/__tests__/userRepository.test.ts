@@ -77,13 +77,12 @@ describe('UserRepository', () => {
       expect(result).toBe(userDoc);
     });
 
-    it('should throw error if db.findOne returns null', async () => {
+    it('should return null if db.findOne returns null', async () => {
       const username = 'nonexistent';
       dbMock.findOne.mockResolvedValue(null);
 
-      await expect(
-        repository.getUserByUsername(username, dbMock),
-      ).rejects.toThrow('User not found');
+      const result = await repository.getUserByUsername(username, dbMock);
+      expect(result).toBe(null);
     });
 
     it('should propagate errors if db.findOne rejects', async () => {
