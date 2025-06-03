@@ -16,11 +16,15 @@ import { registerValidation } from './validators/userValidator.js';
 
 export class App {
   app: express.Application;
+  userController: UserController;
   server: http.Server | null = null;
 
-  constructor() {
+  constructor(userController?: UserController) {
     this.app = express();
     this.configureMiddleware();
+    this.userController =
+      userController ??
+      new UserController(new UserService(new UserRepository()));
     this.configureRoutes();
   }
 
@@ -33,15 +37,11 @@ export class App {
   };
 
   configureRoutes = () => {
-    const userRepository = new UserRepository();
-    const userService = new UserService(userRepository);
-    const userController = new UserController(userService);
-
     this.app.post(
       '/register',
       [registerValidation, validateRequest] as RequestHandler[],
       (req: express.Request<RegisterRequest>, res: express.Response) =>
-        userController.register(req, res, models.user),
+        this.userController.register(req, res, models.user),
     );
 
     // HealthCheck endpoint
