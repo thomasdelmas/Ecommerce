@@ -1,7 +1,7 @@
 import { IUser } from '../../types/user.js';
-import mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 
-export const UserSchema = new mongoose.Schema<IUser>({
+export const UserSchema = new Schema<IUser>({
   username: {
     type: String,
     required: true,
