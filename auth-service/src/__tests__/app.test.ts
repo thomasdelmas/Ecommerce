@@ -3,11 +3,17 @@ import {
   describe,
   expect,
   beforeEach,
+	beforeAll,
   it,
   afterEach,
+	afterAll,
 } from '@jest/globals';
 import request from 'supertest';
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
+
 
 //  Mock first
 jest.mock('../controllers/userController', () => {
@@ -236,4 +242,50 @@ describe('App', () => {
       expect(disconnectSpy).toHaveBeenCalled();
     });
   });
+
+	describe('AuthService - Register Endpoint (Real)', () => {
+		let appInstance: App;
+
+		beforeAll(async () => {
+			mongoServer = await MongoMemoryServer.create();
+			config.mongoURI = mongoServer.getUri();
+		});
+
+		beforeEach(async () => {
+			appInstance = new App();
+			await appInstance.start();
+		});
+
+		afterEach(async () => {
+			await appInstance.stop();
+		});
+
+		afterAll(async () => {
+			if (mongoServer) {
+				await mongoServer.stop();
+			}
+		});
+
+		it('should register a user successfully', async () => {
+			const res = await request(appInstance.app).post('/register').send({
+				username: 'test@example.com',
+				password: '12345678Aa',
+				confirmPassword: '12345678Aa',
+			});
+
+			expect(res.status).toBe(201);
+			expect(res.body.ok).toBe(true);
+		});
+
+		it('should fail if passwords do not match', async () => {
+			const res = await request(appInstance.app).post('/register').send({
+				username: 'test@example.com',
+				password: '12345678Aa',
+				confirmPassword: 'wrongPass123',
+			});
+
+			expect(res.status).toBe(400);
+			expect(res.body.errors).toBeDefined();
+		});
+	});
 });
