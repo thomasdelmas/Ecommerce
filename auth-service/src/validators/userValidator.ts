@@ -26,3 +26,20 @@ export const registerValidation: ValidationChain[] = [
     .custom((value, { req }) => value === req.body.password)
     .withMessage('Passwords do not match'),
 ];
+
+export const loginValidation: ValidationChain[] = [
+  body('username')
+    .trim()
+    .notEmpty()
+    .withMessage('Username is required')
+    .isLength({ min: 2 })
+    .withMessage('Username invalid'),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password invalid')
+    .isLength({ max: 30 })
+    .withMessage('Password invalid'),
+];
