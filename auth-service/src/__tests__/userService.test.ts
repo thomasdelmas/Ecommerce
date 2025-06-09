@@ -3,9 +3,8 @@ import { IUserRepository } from '../repositories/userRepository';
 import { UserService } from '../services/userService';
 import { IDBConn } from '../types/db';
 import { IUser } from '../types/user';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { Schema } from 'mongoose';
 import jwt from 'jsonwebtoken';
 
 jest.mock('bcryptjs');
@@ -16,6 +15,7 @@ describe('UserService', () => {
   let service: UserService;
   let username: string;
   let password: string;
+  let id: string;
   let db: IDBConn;
   let mockUser: HydratedDocument<IUser>;
 
@@ -23,21 +23,23 @@ describe('UserService', () => {
     userRepositoryMock = {
       createUsers: jest.fn(),
       getUserByUsername: jest.fn(),
+      getUserById: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
 
     service = new UserService(userRepositoryMock);
 
     username = 'testuser';
     password = 'testpassword';
+    id = 'ffffffffffffffffffffffff';
 
     db = {} as IDBConn;
 
     mockUser = {
-      _id: 'user123',
+      _id: new Types.ObjectId('ffffffffffffffffffffffff'),
       username,
       password,
       role: '',
-    } as HydratedDocument<IUser>;
+    } as unknown as HydratedDocument<IUser>;
   });
 
   describe('register', () => {
@@ -51,7 +53,7 @@ describe('UserService', () => {
         capturedHashedPassword = usersData[0].password;
         return usersData.map((user) => ({
           ...user,
-          _id: new Schema.Types.ObjectId('123'),
+          _id: new Types.ObjectId('ffffffffffffffffffffffff'),
           toObject: jest.fn().mockReturnValue(user),
           toJSON: jest.fn().mockReturnValue(user),
         })) as unknown as HydratedDocument<IUser>[];
@@ -137,8 +139,11 @@ describe('UserService', () => {
         'testpassword',
       );
       expect(jwt.sign).toHaveBeenCalledWith(
-        { id: 'user123', role: '' },
+        { id: mockUser._id, role: '' },
         expect.any(String),
+        expect.objectContaining({
+          expiresIn: expect.any(String),
+        }),
       );
       expect(token).toBe('fake_jwt_token');
     });
@@ -168,6 +173,37 @@ describe('UserService', () => {
       const token = await service.login('test_user', 'password123', db);
 
       expect(token).toBeNull();
+    });
+  });
+
+  describe('getProfile', () => {
+    it('should get user and return his profile', async () => {
+      userRepositoryMock.getUserById.mockResolvedValue(mockUser);
+
+      const user = await service.getProfile(id, db);
+
+      expect(userRepositoryMock.getUserById).toHaveBeenCalledWith(id, db);
+      expect(user).toStrictEqual({
+        id: mockUser._id.toString(),
+        username: mockUser.username,
+        role: mockUser.role,
+      });
+    });
+
+    it('should return null if user is not found', async () => {
+      userRepositoryMock.getUserById.mockResolvedValue(null);
+
+      const user = await service.getProfile('gggggggggggggggggggggggg', db);
+
+      expect(user).toBeNull();
+    });
+
+    it('should return null and handle exceptions', async () => {
+      userRepositoryMock.getUserById.mockRejectedValue(new Error('DB error'));
+
+      const user = await service.getProfile(id, db);
+
+      expect(user).toBeNull();
     });
   });
 });
