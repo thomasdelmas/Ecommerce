@@ -5,6 +5,7 @@ import { IUser } from '../types/user.js';
 import bcrypt from 'bcryptjs';
 import { IUserRepository } from '../repositories/userRepository.js';
 import config from '../config/validatedConfig.js';
+import { IProfile } from '../types/profile.js';
 
 export type IUserService = {
   register: (
@@ -21,6 +22,7 @@ export type IUserService = {
     username: string,
     db: IDBConn,
   ) => Promise<HydratedDocument<IUser> | null>;
+  getProfile: (id: string, db: IDBConn) => Promise<IProfile | null>;
 };
 
 export class UserService implements IUserService {
@@ -63,11 +65,33 @@ export class UserService implements IUserService {
           role: user.role,
         },
         config.privateKey,
+        { expiresIn: '1h' },
       );
 
       return token;
     } catch (err) {
       console.error('Error in login:', err);
+      return null;
+    }
+  };
+
+  getProfile = async (id: string, db: IDBConn) => {
+    try {
+      const user = await this.userRepository.getUserById(id, db);
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const profile = {
+        id: user._id.toString(),
+        username: user.username,
+        role: user.role,
+      } as IProfile;
+
+      return profile;
+    } catch (err) {
+      console.error('Error in getProfile:', err);
       return null;
     }
   };
