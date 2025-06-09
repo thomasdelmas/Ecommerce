@@ -10,7 +10,7 @@ import {
 import { UserRepository } from '../repositories/userRepository';
 import { IDBConn } from '../types/db';
 import { IUser } from '../types/user';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 describe('UserRepository', () => {
   let repository: UserRepository;
@@ -74,6 +74,44 @@ describe('UserRepository', () => {
       const result = await repository.getUserByUsername(username, dbMock);
 
       expect(dbMock.findOne).toHaveBeenCalledWith({ username });
+      expect(result).toBe(userDoc);
+    });
+
+    it('should return null if db.findOne returns null', async () => {
+      const username = 'nonexistent';
+      dbMock.findOne.mockResolvedValue(null);
+
+      const result = await repository.getUserByUsername(username, dbMock);
+      expect(result).toBe(null);
+    });
+
+    it('should propagate errors if db.findOne rejects', async () => {
+      const username = 'erroruser';
+      const error = new Error('DB error');
+      dbMock.findOne.mockRejectedValue(error);
+
+      await expect(
+        repository.getUserByUsername(username, dbMock),
+      ).rejects.toThrow('DB error');
+    });
+  });
+
+  describe('getUserById', () => {
+    it('should call db.findOne with username filter and return user', async () => {
+      const id = 'ffffffffffffffffffffffff';
+      const userDoc = {
+        _id: new Types.ObjectId(id),
+        username: 'user_test',
+        password: 'hashed',
+        role: '',
+      } as unknown as HydratedDocument<IUser>;
+
+      dbMock.findOne.mockResolvedValue(userDoc);
+      const result = await repository.getUserById(id, dbMock);
+
+      expect(dbMock.findOne).toHaveBeenCalledWith({
+        _id: new Types.ObjectId(id),
+      });
       expect(result).toBe(userDoc);
     });
 
