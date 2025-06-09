@@ -1,12 +1,14 @@
 import { describe, expect, beforeAll, it, afterAll } from '@jest/globals';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
 import { App } from '../app';
 import config from '../config/validatedConfig';
+import { verify, sign } from 'jsonwebtoken';
 
 describe('AuthService - Integration tests', () => {
   let appInstance: App;
   let user: any;
+  let jwt: string;
+  let userId: string;
 
   beforeAll(async () => {
     appInstance = new App();
@@ -56,12 +58,19 @@ describe('AuthService - Integration tests', () => {
 
       expect(res.status).toBe(200);
 
-      const decoded = jwt.verify(res.body.token, config.privateKey);
+      const decoded = verify(res.body.token, config.privateKey) as {
+        id: string;
+        role: string;
+      };
       expect(decoded).toHaveProperty('id');
       expect(decoded).toHaveProperty('role');
       expect(res.body.message).toBe(
         'Successful login for user ' + req.username,
       );
+
+      // Store token for next tests
+      jwt = res.body.token;
+      userId = decoded.id;
     });
 
     it('should fail if password do not match', async () => {
@@ -74,6 +83,79 @@ describe('AuthService - Integration tests', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.message).toBe('Username or password is not valid');
+    });
+  });
+
+  describe('Profile endpoint', () => {
+    it('should get profile a user successfully and return his profile', async () => {
+      const res = await request(appInstance.app)
+        .get('/profile')
+        .set({ Authorization: jwt })
+        .send();
+
+      expect(res.status).toBe(200);
+
+      expect(res.body.profile).toStrictEqual({
+        id: userId,
+        username: user.username,
+        role: '',
+      });
+      expect(res.body.message).toBe('Profile for user ID ' + userId);
+    });
+
+    it('should fail if no Authorization header with jwt', async () => {
+      const res = await request(appInstance.app).get('/profile').send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe('No JWT');
+    });
+
+    it('should fail if invalid jwt', async () => {
+      const res = await request(appInstance.app)
+        .get('/profile')
+        .set({ Authorization: 'badToken' })
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe('Invalid token');
+    });
+
+    it('should fail with jwt not active', async () => {
+      const tokenNBF = sign(
+        {
+          nbf: Math.floor(Date.now() / 1000) + 4 * 60 * 60,
+          id: user._id,
+          role: '',
+        },
+        config.privateKey,
+      );
+
+      const res = await request(appInstance.app)
+        .get('/profile')
+        .set({ Authorization: tokenNBF })
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe('Token not active');
+    });
+
+    it('should fail with jwt expired', async () => {
+      const tokenExpired = sign(
+        {
+          exp: Math.floor(Date.now() / 1000) - 4 * 60 * 60,
+          id: user._id,
+          role: '',
+        },
+        config.privateKey,
+      );
+
+      const res = await request(appInstance.app)
+        .get('/profile')
+        .set({ Authorization: tokenExpired })
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe('Token expired');
     });
   });
 });
