@@ -7,6 +7,7 @@ import bodyParser from 'body-parser';
 import { UserRepository } from './repositories/userRepository.js';
 import { UserService } from './services/userService.js';
 import {
+  GetProfileRequest,
   LoginRequest,
   RegisterRequest,
   UserController,
@@ -17,6 +18,7 @@ import {
   loginValidation,
   registerValidation,
 } from './validators/userValidator.js';
+import { verifyToken } from './middlewares/verifyToken.js';
 
 export class App {
   app: express.Application;
@@ -52,6 +54,12 @@ export class App {
       [loginValidation, validateRequest] as RequestHandler[],
       (req: express.Request<LoginRequest>, res: express.Response) =>
         this.userController.login(req, res, models.user),
+    );
+    this.app.get(
+      '/profile',
+      verifyToken,
+      (req: express.Request<GetProfileRequest>, res: express.Response) =>
+        this.userController.getProfile(req, res, models.user),
     );
 
     // HealthCheck endpoint
