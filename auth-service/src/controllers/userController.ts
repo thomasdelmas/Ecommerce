@@ -1,6 +1,11 @@
 import express from 'express';
 import { IDBConn } from '../types/db.js';
 import { IUserService } from '../services/userService.js';
+import { JwtPayload } from 'jsonwebtoken';
+
+export type GetProfileRequest = {
+  payload: JwtPayload;
+};
 
 export type RegisterRequest = {
   username: string;
@@ -96,6 +101,25 @@ export class UserController implements IUserController {
       }
     }
   };
+
+  getProfile = async (
+    req: express.Request<{}, {}, GetProfileRequest>,
+    res: express.Response,
+    db: IDBConn,
+  ): Promise<any> => {
+    try {
+      const { id } = req.body.payload;
+
+      const profile = await this.userService.getProfile(id, db);
+
+      if (!profile) {
+        throw new Error('Could not get profile');
+      }
+
+      res.status(200).json({
+        profile: profile,
+        message: 'Profile for user ID ' + id,
+      });
     } catch (e) {
       if (e instanceof Error) {
         res.status(400).json({ message: e.message });
