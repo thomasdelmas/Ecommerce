@@ -18,6 +18,7 @@ describe('UserController - register', () => {
     userServiceMock = {
       findUserByUsername: jest.fn(),
       register: jest.fn(),
+      login: jest.fn(),
     } as unknown as jest.Mocked<IUserService>;
 
     controller = new UserController(userServiceMock);
@@ -34,63 +35,138 @@ describe('UserController - register', () => {
     db = {} as IDBConn;
   });
 
-  it('should create user successfully', async () => {
-    userServiceMock.findUserByUsername.mockResolvedValue(null);
-    userServiceMock.register.mockResolvedValue({
-      _id: 'someid',
-      username: 'testuser',
-      password: 'hashedpass',
-      role: '',
-    } as unknown as HydratedDocument<IUser>);
+  describe('register', () => {
+    it('should create user successfully', async () => {
+      userServiceMock.findUserByUsername.mockResolvedValue(null);
+      userServiceMock.register.mockResolvedValue({
+        _id: 'someid',
+        username: 'testuser',
+        password: 'hashedpass',
+        role: '',
+      } as unknown as HydratedDocument<IUser>);
 
-    await controller.register(req as Request, res as Response, db);
+      await controller.register(req as Request, res as Response, db);
 
-    expect(userServiceMock.findUserByUsername).toHaveBeenCalledWith(
-      'testuser',
-      db,
-    );
-    expect(userServiceMock.register).toHaveBeenCalledWith(
-      'testuser',
-      'testpass',
-      db,
-    );
-    expect(res.json).toHaveBeenCalledWith({ message: 'Created user testuser' });
-  });
+      expect(userServiceMock.findUserByUsername).toHaveBeenCalledWith(
+        'testuser',
+        db,
+      );
+      expect(userServiceMock.register).toHaveBeenCalledWith(
+        'testuser',
+        'testpass',
+        db,
+      );
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Created user testuser',
+      });
+    });
 
-  it('should return error if username is taken', async () => {
-    userServiceMock.findUserByUsername.mockResolvedValue({
-      _id: 'someid',
-      username: 'testuser',
-      password: 'hashedpass',
-      role: '',
-    } as unknown as HydratedDocument<IUser>);
+    it('should return error if username is taken', async () => {
+      userServiceMock.findUserByUsername.mockResolvedValue({
+        _id: 'someid',
+        username: 'testuser',
+        password: 'hashedpass',
+        role: '',
+      } as unknown as HydratedDocument<IUser>);
 
-    await controller.register(req as Request, res as Response, db);
+      await controller.register(req as Request, res as Response, db);
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      message: 'Username already taken',
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Username already taken',
+      });
+    });
+
+    it('should return error if registration fails', async () => {
+      userServiceMock.findUserByUsername.mockResolvedValue(null);
+      userServiceMock.register.mockResolvedValue(null);
+
+      await controller.register(req as Request, res as Response, db);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Could not register user',
+      });
+    });
+
+    it('should handle service errors gracefully', async () => {
+      userServiceMock.findUserByUsername.mockRejectedValue(
+        new Error('DB error'),
+      );
+
+      await controller.register(req as Request, res as Response, db);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
     });
   });
 
-  it('should return error if registration fails', async () => {
-    userServiceMock.findUserByUsername.mockResolvedValue(null);
-    userServiceMock.register.mockResolvedValue(null);
+  describe('login', () => {
+    it('should login a user succesfully', async () => {
+      const token = 'token1234';
+      userServiceMock.findUserByUsername.mockResolvedValue({
+        _id: 'someid',
+        username: 'testuser',
+        password: 'hashedpass',
+        role: '',
+      } as unknown as HydratedDocument<IUser>);
 
-    await controller.register(req as Request, res as Response, db);
+      userServiceMock.login.mockResolvedValue(token);
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      message: 'Could not register user',
+      await controller.login(req as Request, res as Response, db);
+
+      expect(userServiceMock.findUserByUsername).toHaveBeenCalledWith(
+        'testuser',
+        db,
+      );
+      expect(userServiceMock.login).toHaveBeenCalledWith(
+        'testuser',
+        'testpass',
+        db,
+      );
+      expect(res.json).toHaveBeenCalledWith({
+        token: token,
+        message: 'Successful login for user ' + 'testuser',
+      });
     });
-  });
 
-  it('should handle service errors gracefully', async () => {
-    userServiceMock.findUserByUsername.mockRejectedValue(new Error('DB error'));
+    it('should return error if username does not exist', async () => {
+      userServiceMock.findUserByUsername.mockResolvedValue(null);
 
-    await controller.register(req as Request, res as Response, db);
+      await controller.login(req as Request, res as Response, db);
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'User does not exist',
+      });
+    });
+
+    it('should return error if login return a null token', async () => {
+      userServiceMock.findUserByUsername.mockResolvedValue({
+        _id: 'someid',
+        username: 'testuser',
+        password: 'hashedpass',
+        role: '',
+      } as unknown as HydratedDocument<IUser>);
+      userServiceMock.login.mockResolvedValue(null);
+
+      await controller.login(req as Request, res as Response, db);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Username or password is not valid',
+      });
+    });
+
+    it('should handle service errors gracefully', async () => {
+      userServiceMock.findUserByUsername.mockRejectedValue(
+        new Error('DB error'),
+      );
+
+      await controller.login(req as Request, res as Response, db);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+    });
   });
 });
