@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { HydratedDocument } from 'mongoose';
 import { IDBConn } from '../types/db.js';
 import { IUser } from '../types/user.js';
@@ -11,6 +12,11 @@ export type IUserService = {
     password: string,
     db: IDBConn,
   ) => Promise<HydratedDocument<IUser> | null>;
+  login: (
+    username: string,
+    password: string,
+    db: IDBConn,
+  ) => Promise<string | null>;
   findUserByUsername: (
     username: string,
     db: IDBConn,
@@ -33,6 +39,35 @@ export class UserService implements IUserService {
       return newUsers[0];
     } catch (err) {
       console.error('Error in register:', err);
+      return null;
+    }
+  };
+
+  login = async (username: string, password: string, db: IDBConn) => {
+    try {
+      const user = await this.findUserByUsername(username, db);
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const isMatch = bcrypt.compareSync(password, user.password);
+
+      if (!isMatch) {
+        throw new Error('Invalid password');
+      }
+
+      const token = jwt.sign(
+        {
+          id: user._id,
+          role: user.role,
+        },
+        config.privateKey,
+      );
+
+      return token;
+    } catch (err) {
+      console.error('Error in login:', err);
       return null;
     }
   };
