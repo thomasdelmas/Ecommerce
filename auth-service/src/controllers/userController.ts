@@ -86,12 +86,16 @@ export class UserController implements IUserController {
         throw new Error('Username or password is not valid');
       }
 
-      res
-        .status(201)
-        .json({
-          token: token,
-          message: 'Successful login for user ' + username,
-        });
+      res.status(200).json({
+        token: token,
+        message: 'Successful login for user ' + username,
+      });
+    } catch (e) {
+      if (e instanceof Error) {
+        res.status(400).json({ message: e.message });
+      }
+    }
+  };
     } catch (e) {
       if (e instanceof Error) {
         res.status(400).json({ message: e.message });

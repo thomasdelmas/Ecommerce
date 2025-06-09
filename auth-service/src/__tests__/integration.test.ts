@@ -54,7 +54,7 @@ describe('AuthService - Integration tests', () => {
 
       const res = await request(appInstance.app).post('/login').send(req);
 
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(200);
 
       const decoded = jwt.verify(res.body.token, config.privateKey);
       expect(decoded).toHaveProperty('id');
