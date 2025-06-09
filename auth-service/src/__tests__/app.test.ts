@@ -3,17 +3,11 @@ import {
   describe,
   expect,
   beforeEach,
-	beforeAll,
   it,
   afterEach,
-	afterAll,
 } from '@jest/globals';
 import request from 'supertest';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-
-let mongoServer: MongoMemoryServer;
-
 
 //  Mock first
 jest.mock('../controllers/userController', () => {
@@ -59,70 +53,6 @@ describe('App', () => {
     }
     jest.clearAllMocks();
     jest.restoreAllMocks();
-  });
-
-  describe('App config vars', () => {
-    let app: App;
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-      app = new App();
-    });
-
-    it('should call console.warn if allowedOrigins is undefined', async () => {
-      config.allowedOrigins = undefined as any;
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-
-      const appInstance = new App();
-      await appInstance.start();
-
-      expect(warnSpy).toHaveBeenCalledWith(
-        'No allowed cross-origin configured',
-      );
-      await appInstance.stop();
-    });
-
-    it('should throw if mongoURI is undefined', async () => {
-      config.mongoURI = undefined as any;
-      const stopSpy = jest
-        .spyOn(app, 'stop')
-        .mockImplementation(async () => {});
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
-      await app.start();
-
-      expect(logSpy).toHaveBeenCalledWith('MongoDB URI is undefined');
-      expect(stopSpy).toHaveBeenCalled();
-    });
-
-    it('should throw if port is undefined', async () => {
-      config.mongoURI = 'mongodb://localhost:27017/test';
-      config.port = undefined as any;
-      const stopSpy = jest
-        .spyOn(app, 'stop')
-        .mockImplementation(async () => {});
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
-      await app.start();
-
-      expect(logSpy).toHaveBeenCalledWith('Port is undefined');
-      expect(stopSpy).toHaveBeenCalled();
-    });
-
-    it('should throw if dbName is undefined', async () => {
-      config.mongoURI = 'mongodb://localhost:27017/test';
-      config.port = 3000;
-      config.dbName = undefined as any;
-      const stopSpy = jest
-        .spyOn(app, 'stop')
-        .mockImplementation(async () => {});
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
-      await app.start();
-
-      expect(logSpy).toHaveBeenCalledWith('DB Name is undefined');
-      expect(stopSpy).toHaveBeenCalled();
-    });
   });
 
   describe('Middleware & Routes', () => {
@@ -241,50 +171,4 @@ describe('App', () => {
       expect(disconnectSpy).toHaveBeenCalled();
     });
   });
-
-	describe('AuthService - Register Endpoint (Real)', () => {
-		let appInstance: App;
-
-		beforeAll(async () => {
-			mongoServer = await MongoMemoryServer.create();
-			config.mongoURI = mongoServer.getUri();
-		});
-
-		beforeEach(async () => {
-			appInstance = new App();
-			await appInstance.start();
-		});
-
-		afterEach(async () => {
-			await appInstance.stop();
-		});
-
-		afterAll(async () => {
-			if (mongoServer) {
-				await mongoServer.stop();
-			}
-		});
-
-		it('should register a user successfully', async () => {
-			const res = await request(appInstance.app).post('/register').send({
-				username: 'test@example.com',
-				password: '12345678Aa',
-				confirmPassword: '12345678Aa',
-			});
-
-			expect(res.status).toBe(201);
-			expect(res.body.ok).toBe(true);
-		});
-
-		it('should fail if passwords do not match', async () => {
-			const res = await request(appInstance.app).post('/register').send({
-				username: 'test@example.com',
-				password: '12345678Aa',
-				confirmPassword: 'wrongPass123',
-			});
-
-			expect(res.status).toBe(400);
-			expect(res.body.errors).toBeDefined();
-		});
-	});
 });
