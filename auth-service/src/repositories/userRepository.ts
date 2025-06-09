@@ -1,4 +1,4 @@
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { IUser } from '../types/user.js';
 import { IDBConn } from '../types/db.js';
 
@@ -11,6 +11,10 @@ export type IUserRepository = {
     username: IUser['username'],
     db: IDBConn,
   ) => Promise<HydratedDocument<IUser> | null>;
+  getUserById: (
+    id: string,
+    db: IDBConn,
+  ) => Promise<HydratedDocument<IUser> | null>;
 };
 
 export class UserRepository implements IUserRepository {
@@ -20,6 +24,11 @@ export class UserRepository implements IUserRepository {
 
   getUserByUsername = async (username: IUser['username'], db: IDBConn) => {
     const user = await db.findOne({ username });
+    return user;
+  };
+
+  getUserById = async (id: string, db: IDBConn) => {
+    const user = await db.findOne({ _id: new Types.ObjectId(id) });
     return user;
   };
 }
