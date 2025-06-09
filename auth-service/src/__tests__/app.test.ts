@@ -32,17 +32,16 @@ jest.mock('../models/init', () => ({
   },
 }));
 
-jest.mock('../config', () => ({
-  config: {
-    mongoURI: 'mongodb://localhost:27017/test',
-    port: 3000,
-    dbName: 'testdb',
-    allowedOrigins: '*',
-  },
+jest.mock('../config/validatedConfig', () => ({
+  mongoURI: 'mongodb://localhost:27017/',
+  port: 3000,
+  dbName: 'testdb',
+  allowedOrigins: '*',
+  privateKey: '2oisdfo45oi#$%',
 }));
 
 import { App } from '../app';
-import { config } from '../config';
+import config from '../config/validatedConfig';
 
 const originalConfig = { ...config };
 

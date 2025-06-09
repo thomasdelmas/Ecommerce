@@ -1,7 +1,7 @@
 import express, { RequestHandler } from 'express';
 import mongoose from 'mongoose';
 import http from 'http';
-import { config } from './config/index.js';
+import config from './config/validatedConfig.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { UserRepository } from './repositories/userRepository.js';
@@ -80,18 +80,6 @@ export class App {
 
   start = async () => {
     try {
-      if (!config.mongoURI) {
-        throw new Error('MongoDB URI is undefined');
-      }
-
-      if (!config.port) {
-        throw new Error('Port is undefined');
-      }
-
-      if (!config.dbName) {
-        throw new Error('DB Name is undefined');
-      }
-
       this.server = this.app.listen(config.port, () =>
         console.log(`Server started on port ${config.port}`),
       );

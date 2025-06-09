@@ -3,6 +3,7 @@ import { IDBConn } from '../types/db.js';
 import { IUser } from '../types/user.js';
 import bcrypt from 'bcryptjs';
 import { IUserRepository } from '../repositories/userRepository.js';
+import config from '../config/validatedConfig.js';
 
 export type IUserService = {
   register: (
