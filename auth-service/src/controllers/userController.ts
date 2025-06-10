@@ -6,6 +6,14 @@ export type GetProfileRequest = {
   payload: JwtPayload;
 };
 
+export type IDeleteUserReqBody = {
+  payload: JwtPayload;
+};
+
+export type IDeleteUserParams = {
+  id: string;
+};
+
 export type RegisterRequest = {
   username: string;
   password: string;
@@ -23,6 +31,10 @@ export type IUserController = {
   ) => Promise<any>;
   login: (
     req: express.Request<RegisterRequest>,
+    res: express.Response,
+  ) => Promise<any>;
+	deleteUser: (
+    req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
     res: express.Response,
   ) => Promise<any>;
 };
@@ -103,6 +115,36 @@ export class UserController implements IUserController {
       res.status(200).json({
         profile: profile,
         message: 'Profile for user ID ' + id,
+      });
+    } catch (e) {
+      if (e instanceof Error) {
+        res.status(400).json({ message: e.message });
+      }
+    }
+  };
+
+  deleteUser = async (
+    req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+    res: express.Response,
+  ): Promise<any> => {
+    try {
+      const tokenId = req.body.payload.id;
+      const userId = req.params.id;
+
+      if (userId !== tokenId) {
+        res.status(403).send('Forbidden');
+        return;
+      }
+
+      const result = await this.userService.deleteUsers([userId]);
+
+      if (!result) {
+        throw new Error('Could not delete users');
+      }
+
+      res.status(200).json({
+        userCount: result,
+        message: 'Successfuly delete ' + result + ' users',
       });
     } catch (e) {
       if (e instanceof Error) {
