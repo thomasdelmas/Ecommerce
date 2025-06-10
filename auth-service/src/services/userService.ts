@@ -17,6 +17,7 @@ export type IUserService = {
     username: string,
   ) => Promise<HydratedDocument<IUser> | null>;
   getProfile: (id: string) => Promise<IProfile | null>;
+  deleteUsers: (userIds: string[]) => Promise<number | null>;
 };
 
 export class UserService implements IUserService {
@@ -114,6 +115,17 @@ export class UserService implements IUserService {
       return await this.userRepository.getUserByUsername(username);
     } catch (err) {
       console.error('Error in findUserByUsername:', err);
+      return null;
+    }
+  };
+
+  deleteUsers = async (userIds: string[]) => {
+    try {
+      const res = await this.userRepository.deleteUsers(userIds);
+
+      return res ? res.deletedCount : null;
+    } catch (err) {
+      console.error('Error in deleteUsers:', err);
       return null;
     }
   };
