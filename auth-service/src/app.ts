@@ -8,6 +8,9 @@ import { UserRepository } from './repositories/userRepository.js';
 import { UserService } from './services/userService.js';
 import {
   GetProfileRequest,
+  IDeleteUserParams,
+  IDeleteUserReqBody,
+  IDeleteUsersReqBody,
   LoginRequest,
   RegisterRequest,
   UserController,
@@ -69,6 +72,20 @@ export class App {
       [verifyToken, authorize(['read:user'])],
       (req: express.Request<GetProfileRequest>, res: express.Response) =>
         this.userController.getProfile(req, res),
+    );
+    this.app.delete(
+      '/user',
+      [verifyToken, authorize(['write:admin'])],
+      (req: express.Request<IDeleteUsersReqBody>, res: express.Response) =>
+        this.userController.deleteUsers(req, res),
+    );
+    this.app.delete(
+      '/user/:id',
+      [verifyToken, authorize(['write:user'])],
+      (
+        req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+        res: express.Response,
+      ) => this.userController.deleteUser(req, res),
     );
 
     // HealthCheck endpoint
