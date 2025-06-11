@@ -7,5 +7,5 @@ import { IRole } from '../types/role.js';
 
 export const models = {
   user: mongoose.model<IUser, IUserModel>('Users', UserSchema),
-	role: mongoose.model<IRole, IRoleModel>('Roles', RoleSchema),
+  role: mongoose.model<IRole, IRoleModel>('Roles', RoleSchema),
 };

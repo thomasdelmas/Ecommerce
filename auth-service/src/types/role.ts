@@ -1,4 +1,4 @@
 export type IRole = {
-	role: string,
-	permissions: string[],
-}
+  role: string;
+  permissions: string[];
+};

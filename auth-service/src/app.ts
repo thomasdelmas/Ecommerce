@@ -26,22 +26,20 @@ import { RoleService } from './services/roleService.js';
 export class App {
   app: express.Application;
   userController: UserController;
-	// roleController: RoleController;
+  // roleController: RoleController;
   server: http.Server | null = null;
 
   constructor(userController?: UserController) {
     this.app = express();
     this.configureMiddleware();
-		const userRepository = new UserRepository(models.user);
-		const roleRepository = new RoleRepository(models.role);
-		const roleService = new RoleService(roleRepository);
-		const userService = new UserService(userRepository, roleService);
-    this.userController =
-      userController ??
-      new UserController(userService);
-		// this.roleController =
-		// 	roleController ??
-		// 	new UserController();
+    const userRepository = new UserRepository(models.user);
+    const roleRepository = new RoleRepository(models.role);
+    const roleService = new RoleService(roleRepository);
+    const userService = new UserService(userRepository, roleService);
+    this.userController = userController ?? new UserController(userService);
+    // this.roleController =
+    // 	roleController ??
+    // 	new UserController();
     this.configureRoutes();
   }
 
