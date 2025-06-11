@@ -8,13 +8,13 @@ import {
   beforeAll,
 } from '@jest/globals';
 import { UserRepository } from '../repositories/userRepository';
-import { IDBConn } from '../types/db';
+import { IUserModel } from '../types/db';
 import { IUser } from '../types/user';
 import { HydratedDocument, Types } from 'mongoose';
 
 describe('UserRepository', () => {
   let repository: UserRepository;
-  let dbMock: jest.Mocked<IDBConn>;
+  let dbMock: jest.Mocked<IUserModel>;
 
   beforeAll(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -28,7 +28,7 @@ describe('UserRepository', () => {
     dbMock = {
       create: jest.fn(),
       findOne: jest.fn(),
-    } as unknown as jest.Mocked<IDBConn>;
+    } as unknown as jest.Mocked<IUserModel>;
 
     repository = new UserRepository(dbMock);
   });

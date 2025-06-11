@@ -19,18 +19,29 @@ import {
   registerValidation,
 } from './validators/userValidator.js';
 import { verifyToken } from './middlewares/verifyToken.js';
+import { authorize } from './middlewares/authorize.js';
+import { RoleRepository } from './repositories/roleRepository.js';
+import { RoleService } from './services/roleService.js';
 
 export class App {
   app: express.Application;
   userController: UserController;
+	// roleController: RoleController;
   server: http.Server | null = null;
 
   constructor(userController?: UserController) {
     this.app = express();
     this.configureMiddleware();
+		const userRepository = new UserRepository(models.user);
+		const roleRepository = new RoleRepository(models.user);
+		const roleService = new RoleService(roleRepository);
+		const userService = new UserService(userRepository, roleService);
     this.userController =
       userController ??
-      new UserController(new UserService(new UserRepository(models.user)));
+      new UserController(userService);
+		// this.roleController =
+		// 	roleController ??
+		// 	new UserController();
     this.configureRoutes();
   }
 
@@ -57,7 +68,7 @@ export class App {
     );
     this.app.get(
       '/profile',
-      verifyToken,
+      [verifyToken, authorize(['read:user'])],
       (req: express.Request<GetProfileRequest>, res: express.Response) =>
         this.userController.getProfile(req, res),
     );

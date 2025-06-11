@@ -1,20 +1,25 @@
 import { jest, describe, expect, beforeEach, it } from '@jest/globals';
 import { IUserRepository } from '../repositories/userRepository';
 import { UserService } from '../services/userService';
+import { IRoleModel, IUserModel } from '../types/db';
 import { IUser } from '../types/user';
 import { HydratedDocument, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { IRoleService } from '../services/roleService';
 
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
 
 describe('UserService', () => {
   let userRepositoryMock: jest.Mocked<IUserRepository>;
+	let roleServiceMock: jest.Mocked<IRoleService>;
   let service: UserService;
   let username: string;
   let password: string;
   let id: string;
+  let userDB: IUserModel;
+  let roleDB: IRoleModel;
   let mockUser: HydratedDocument<IUser>;
 
   beforeEach(() => {
@@ -24,7 +29,11 @@ describe('UserService', () => {
       getUserById: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
 
-    service = new UserService(userRepositoryMock);
+		roleServiceMock = {
+			getRole: jest.fn()
+		} as unknown as jest.Mocked<IRoleService>
+		
+    service = new UserService(userRepositoryMock, roleServiceMock);
 
     username = 'testuser';
     password = 'testpassword';
@@ -83,7 +92,7 @@ describe('UserService', () => {
     });
 
     it('should return null when repository throws an error', async () => {
-      userRepositoryMock.createUsers.mockRejectedValue(new Error('DB error'));
+      userRepositoryMock.createUsers.mockRejectedValue(new Error('USERDB error'));
 
       const result = await service.register(username, password);
 
@@ -158,7 +167,7 @@ describe('UserService', () => {
 
     it('should return null and handle exceptions', async () => {
       userRepositoryMock.getUserByUsername.mockRejectedValue(
-        new Error('DB error'),
+        new Error('USERDB error'),
       );
 
       const token = await service.login('test_user', 'password123');
@@ -190,7 +199,7 @@ describe('UserService', () => {
     });
 
     it('should return null and handle exceptions', async () => {
-      userRepositoryMock.getUserById.mockRejectedValue(new Error('DB error'));
+      userRepositoryMock.getUserById.mockRejectedValue(new Error('USERDB error'));
 
       const user = await service.getProfile(id);
 

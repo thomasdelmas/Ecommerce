@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { IUserRepository } from '../repositories/userRepository.js';
 import config from '../config/validatedConfig.js';
 import { IProfile } from '../types/profile.js';
+import { IRoleService } from './roleService.js';
 
 export type IUserService = {
   register: (
@@ -19,7 +20,10 @@ export type IUserService = {
 };
 
 export class UserService implements IUserService {
-  constructor(private userRepository: IUserRepository) {}
+  constructor(
+		private userRepository: IUserRepository,
+		private roleService: IRoleService,
+	) {}
 
   register = async (username: string, password: string) => {
     try {
@@ -27,7 +31,7 @@ export class UserService implements IUserService {
       const hash = bcrypt.hashSync(password, salt);
 
       const newUsers = await this.userRepository.createUsers([
-        { username: username, password: hash, role: '' },
+        { username: username, password: hash, role: 'user' },
       ]);
 
       return newUsers[0];
@@ -51,13 +55,15 @@ export class UserService implements IUserService {
         throw new Error('Invalid password');
       }
 
+			const permissions = await this.roleService.getPermissionsForRole(user.role, roleDB);
+
       const token = jwt.sign(
         {
           id: user._id,
-          role: user.role,
+          permissions: permissions,
         },
         config.privateKey,
-        { expiresIn: '1h' },
+        { expiresIn: '15min' },
       );
 
       return token;
@@ -75,10 +81,17 @@ export class UserService implements IUserService {
         throw new Error('User not found');
       }
 
+			const permissions = await this.roleService.getPermissionsForRole(user.role, roleDB)
+
+			if (!permissions) {
+				throw new Error('Error in getPermissionsForRole')
+			}
+
       const profile = {
         id: user._id.toString(),
         username: user.username,
-        role: user.role,
+				role: user.role,
+        permissions: permissions,
       } as IProfile;
 
       return profile;
