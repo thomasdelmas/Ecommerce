@@ -1,7 +1,6 @@
 import { jest, describe, expect, beforeEach, it } from '@jest/globals';
 import { IUserRepository } from '../repositories/userRepository';
 import { UserService } from '../services/userService';
-import { IRoleModel, IUserModel } from '../types/db';
 import { IUser } from '../types/user';
 import { HydratedDocument, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
@@ -13,13 +12,11 @@ jest.mock('jsonwebtoken');
 
 describe('UserService', () => {
   let userRepositoryMock: jest.Mocked<IUserRepository>;
-	let roleServiceMock: jest.Mocked<IRoleService>;
+  let roleServiceMock: jest.Mocked<IRoleService>;
   let service: UserService;
   let username: string;
   let password: string;
   let id: string;
-  let userDB: IUserModel;
-  let roleDB: IRoleModel;
   let mockUser: HydratedDocument<IUser>;
 
   beforeEach(() => {
@@ -29,10 +26,10 @@ describe('UserService', () => {
       getUserById: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
 
-		roleServiceMock = {
-			getRole: jest.fn()
-		} as unknown as jest.Mocked<IRoleService>
-		
+    roleServiceMock = {
+      getPermissionsForRole: jest.fn(),
+    } as unknown as jest.Mocked<IRoleService>;
+
     service = new UserService(userRepositoryMock, roleServiceMock);
 
     username = 'testuser';
@@ -43,7 +40,7 @@ describe('UserService', () => {
       _id: new Types.ObjectId('ffffffffffffffffffffffff'),
       username,
       password,
-      role: '',
+      role: 'user',
     } as unknown as HydratedDocument<IUser>;
   });
 
@@ -70,7 +67,7 @@ describe('UserService', () => {
         expect.objectContaining({
           username,
           password: expect.any(String),
-          role: '',
+          role: 'user',
         }),
       ]);
 
@@ -86,13 +83,15 @@ describe('UserService', () => {
         expect.objectContaining({
           username,
           password: capturedHashedPassword,
-          role: '',
+          role: 'user',
         }),
       );
     });
 
     it('should return null when repository throws an error', async () => {
-      userRepositoryMock.createUsers.mockRejectedValue(new Error('USERDB error'));
+      userRepositoryMock.createUsers.mockRejectedValue(
+        new Error('USERDB error'),
+      );
 
       const result = await service.register(username, password);
 
@@ -124,9 +123,13 @@ describe('UserService', () => {
   });
 
   describe('login', () => {
-    it('should get user, compare req password and user hash, jwt sign with user info', async () => {
+    it('should get user, compare passwords and hash, get user permissions and jwt sign with user info', async () => {
       userRepositoryMock.getUserByUsername.mockResolvedValue(mockUser);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+      roleServiceMock.getPermissionsForRole.mockResolvedValue([
+        'read:user',
+        'write:user',
+      ]);
       (jwt.sign as jest.Mock).mockReturnValue('fake_jwt_token');
 
       const token = await service.login('test_user', 'password123');
@@ -138,8 +141,11 @@ describe('UserService', () => {
         'password123',
         'testpassword',
       );
+      expect(roleServiceMock.getPermissionsForRole).toHaveBeenCalledWith(
+        'user',
+      );
       expect(jwt.sign).toHaveBeenCalledWith(
-        { id: mockUser._id, role: '' },
+        { id: mockUser._id, permissions: ['read:user', 'write:user'] },
         expect.any(String),
         expect.objectContaining({
           expiresIn: expect.any(String),
@@ -165,6 +171,16 @@ describe('UserService', () => {
       expect(token).toBeNull();
     });
 
+    it('should return null if getPermissionsForRole returns null', async () => {
+      userRepositoryMock.getUserByUsername.mockResolvedValue(mockUser);
+      (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+      roleServiceMock.getPermissionsForRole.mockResolvedValue(null);
+
+      const token = await service.login('test_user', 'wrong_password');
+
+      expect(token).toBeNull();
+    });
+
     it('should return null and handle exceptions', async () => {
       userRepositoryMock.getUserByUsername.mockRejectedValue(
         new Error('USERDB error'),
@@ -179,14 +195,22 @@ describe('UserService', () => {
   describe('getProfile', () => {
     it('should get user and return his profile', async () => {
       userRepositoryMock.getUserById.mockResolvedValue(mockUser);
+      roleServiceMock.getPermissionsForRole.mockResolvedValue([
+        'read:user',
+        'write:user',
+      ]);
 
       const user = await service.getProfile(id);
 
       expect(userRepositoryMock.getUserById).toHaveBeenCalledWith(id);
+      expect(roleServiceMock.getPermissionsForRole).toHaveBeenCalledWith(
+        'user',
+      );
       expect(user).toStrictEqual({
         id: mockUser._id.toString(),
         username: mockUser.username,
         role: mockUser.role,
+        permissions: ['read:user', 'write:user'],
       });
     });
 
@@ -198,8 +222,19 @@ describe('UserService', () => {
       expect(user).toBeNull();
     });
 
+    it('should return null if getPermissionsForRole returns null', async () => {
+      userRepositoryMock.getUserById.mockResolvedValue(mockUser);
+      roleServiceMock.getPermissionsForRole.mockResolvedValue(null);
+
+      const user = await service.getProfile('gggggggggggggggggggggggg');
+
+      expect(user).toBeNull();
+    });
+
     it('should return null and handle exceptions', async () => {
-      userRepositoryMock.getUserById.mockRejectedValue(new Error('USERDB error'));
+      userRepositoryMock.getUserById.mockRejectedValue(
+        new Error('USERDB error'),
+      );
 
       const user = await service.getProfile(id);
 

@@ -34,7 +34,6 @@ describe('AuthService - Integration tests', () => {
         .send(req)
         .expect(201);
 
-      console.log(res.body);
       expect(res.body).toEqual({ message: 'Created user ' + req.username });
     });
 
@@ -60,10 +59,11 @@ describe('AuthService - Integration tests', () => {
 
       const decoded = verify(res.body.token, config.privateKey) as {
         id: string;
-        role: string;
+        permissions: string;
       };
+
       expect(decoded).toHaveProperty('id');
-      expect(decoded).toHaveProperty('role');
+      expect(decoded).toHaveProperty('permissions');
       expect(res.body.message).toBe(
         'Successful login for user ' + req.username,
       );
@@ -98,7 +98,8 @@ describe('AuthService - Integration tests', () => {
       expect(res.body.profile).toStrictEqual({
         id: userId,
         username: user.username,
-        role: '',
+        role: 'user',
+        permissions: ['read:user', 'write:user'],
       });
       expect(res.body.message).toBe('Profile for user ID ' + userId);
     });
