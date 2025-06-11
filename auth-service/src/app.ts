@@ -33,7 +33,7 @@ export class App {
     this.app = express();
     this.configureMiddleware();
 		const userRepository = new UserRepository(models.user);
-		const roleRepository = new RoleRepository(models.user);
+		const roleRepository = new RoleRepository(models.role);
 		const roleService = new RoleService(roleRepository);
 		const userService = new UserService(userRepository, roleService);
     this.userController =
