@@ -11,7 +11,7 @@ export type IUserRepository = {
 };
 
 export class UserRepository implements IUserRepository {
-  constructor(private db: IDBConn) {}
+  constructor(private db: IUserModel) {}
 
   createUsers = async (users: IUser[]) => {
     return await this.db.create(users);

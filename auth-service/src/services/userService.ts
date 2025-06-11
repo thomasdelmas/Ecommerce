@@ -21,9 +21,9 @@ export type IUserService = {
 
 export class UserService implements IUserService {
   constructor(
-		private userRepository: IUserRepository,
-		private roleService: IRoleService,
-	) {}
+    private userRepository: IUserRepository,
+    private roleService: IRoleService,
+  ) {}
 
   register = async (username: string, password: string) => {
     try {
@@ -55,7 +55,9 @@ export class UserService implements IUserService {
         throw new Error('Invalid password');
       }
 
-			const permissions = await this.roleService.getPermissionsForRole(user.role, roleDB);
+      const permissions = await this.roleService.getPermissionsForRole(
+        user.role,
+      );
 
       const token = jwt.sign(
         {
@@ -81,16 +83,18 @@ export class UserService implements IUserService {
         throw new Error('User not found');
       }
 
-			const permissions = await this.roleService.getPermissionsForRole(user.role, roleDB)
+      const permissions = await this.roleService.getPermissionsForRole(
+        user.role,
+      );
 
-			if (!permissions) {
-				throw new Error('Error in getPermissionsForRole')
-			}
+      if (!permissions) {
+        throw new Error('Error in getPermissionsForRole');
+      }
 
       const profile = {
         id: user._id.toString(),
         username: user.username,
-				role: user.role,
+        role: user.role,
         permissions: permissions,
       } as IProfile;
 

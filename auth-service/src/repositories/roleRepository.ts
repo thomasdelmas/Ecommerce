@@ -1,13 +1,15 @@
-import { HydratedDocument } from "mongoose"
-import { IRole } from "../types/role"
-import { IRoleModel } from "../types/db"
+import { HydratedDocument } from 'mongoose';
+import { IRole } from '../types/role';
+import { IRoleModel } from '../types/db';
 
 export type IRoleRepository = {
-	getRole: (role: string, db: IRoleModel) => Promise<HydratedDocument<IRole> | null>
-}
+  getRole: (role: string) => Promise<HydratedDocument<IRole> | null>;
+};
 
 export class RoleRepository implements IRoleRepository {
-	getRole = async (role: string, db: IRoleModel) => {
-		return db.findOne({ role })
-	}
+  constructor(private db: IRoleModel) {}
+
+  getRole = async (role: string) => {
+    return this.db.findOne({ role });
+  };
 }
