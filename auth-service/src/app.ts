@@ -30,7 +30,7 @@ export class App {
     this.configureMiddleware();
     this.userController =
       userController ??
-      new UserController(new UserService(new UserRepository()));
+      new UserController(new UserService(new UserRepository(models.user)));
     this.configureRoutes();
   }
 
@@ -47,19 +47,19 @@ export class App {
       '/register',
       [registerValidation, validateRequest] as RequestHandler[],
       (req: express.Request<RegisterRequest>, res: express.Response) =>
-        this.userController.register(req, res, models.user),
+        this.userController.register(req, res),
     );
     this.app.post(
       '/login',
       [loginValidation, validateRequest] as RequestHandler[],
       (req: express.Request<LoginRequest>, res: express.Response) =>
-        this.userController.login(req, res, models.user),
+        this.userController.login(req, res),
     );
     this.app.get(
       '/profile',
       verifyToken,
       (req: express.Request<GetProfileRequest>, res: express.Response) =>
-        this.userController.getProfile(req, res, models.user),
+        this.userController.getProfile(req, res),
     );
 
     // HealthCheck endpoint

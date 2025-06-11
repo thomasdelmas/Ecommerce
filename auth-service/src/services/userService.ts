@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import { HydratedDocument } from 'mongoose';
-import { IDBConn } from '../types/db.js';
 import { IUser } from '../types/user.js';
 import bcrypt from 'bcryptjs';
 import { IUserRepository } from '../repositories/userRepository.js';
@@ -11,32 +10,25 @@ export type IUserService = {
   register: (
     username: string,
     password: string,
-    db: IDBConn,
   ) => Promise<HydratedDocument<IUser> | null>;
-  login: (
-    username: string,
-    password: string,
-    db: IDBConn,
-  ) => Promise<string | null>;
+  login: (username: string, password: string) => Promise<string | null>;
   findUserByUsername: (
     username: string,
-    db: IDBConn,
   ) => Promise<HydratedDocument<IUser> | null>;
-  getProfile: (id: string, db: IDBConn) => Promise<IProfile | null>;
+  getProfile: (id: string) => Promise<IProfile | null>;
 };
 
 export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
 
-  register = async (username: string, password: string, db: IDBConn) => {
+  register = async (username: string, password: string) => {
     try {
       const salt = bcrypt.genSaltSync(10);
       const hash = bcrypt.hashSync(password, salt);
 
-      const newUsers = await this.userRepository.createUsers(
-        [{ username: username, password: hash, role: '' }],
-        db,
-      );
+      const newUsers = await this.userRepository.createUsers([
+        { username: username, password: hash, role: '' },
+      ]);
 
       return newUsers[0];
     } catch (err) {
@@ -45,9 +37,9 @@ export class UserService implements IUserService {
     }
   };
 
-  login = async (username: string, password: string, db: IDBConn) => {
+  login = async (username: string, password: string) => {
     try {
-      const user = await this.findUserByUsername(username, db);
+      const user = await this.findUserByUsername(username);
 
       if (!user) {
         throw new Error('User not found');
@@ -75,9 +67,9 @@ export class UserService implements IUserService {
     }
   };
 
-  getProfile = async (id: string, db: IDBConn) => {
+  getProfile = async (id: string) => {
     try {
-      const user = await this.userRepository.getUserById(id, db);
+      const user = await this.userRepository.getUserById(id);
 
       if (!user) {
         throw new Error('User not found');
@@ -96,9 +88,9 @@ export class UserService implements IUserService {
     }
   };
 
-  findUserByUsername = async (username: string, db: IDBConn) => {
+  findUserByUsername = async (username: string) => {
     try {
-      return await this.userRepository.getUserByUsername(username, db);
+      return await this.userRepository.getUserByUsername(username);
     } catch (err) {
       console.error('Error in findUserByUsername:', err);
       return null;

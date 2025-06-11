@@ -1,5 +1,4 @@
 import express from 'express';
-import { IDBConn } from '../types/db.js';
 import { IUserService } from '../services/userService.js';
 import { JwtPayload } from 'jsonwebtoken';
 
@@ -21,12 +20,10 @@ export type IUserController = {
   register: (
     req: express.Request<RegisterRequest>,
     res: express.Response,
-    db: IDBConn,
   ) => Promise<any>;
   login: (
     req: express.Request<RegisterRequest>,
     res: express.Response,
-    db: IDBConn,
   ) => Promise<any>;
 };
 
@@ -36,25 +33,17 @@ export class UserController implements IUserController {
   register = async (
     req: express.Request<{}, {}, RegisterRequest>,
     res: express.Response,
-    db: IDBConn,
   ): Promise<any> => {
     try {
       const { username, password } = req.body;
 
-      const existingUser = await this.userService.findUserByUsername(
-        username,
-        db,
-      );
+      const existingUser = await this.userService.findUserByUsername(username);
 
       if (existingUser) {
         throw new Error('Username already taken');
       }
 
-      const createdUser = await this.userService.register(
-        username,
-        password,
-        db,
-      );
+      const createdUser = await this.userService.register(username, password);
 
       if (!createdUser) {
         throw new Error('Could not register user');
@@ -71,21 +60,17 @@ export class UserController implements IUserController {
   login = async (
     req: express.Request<{}, {}, RegisterRequest>,
     res: express.Response,
-    db: IDBConn,
   ): Promise<any> => {
     try {
       const { username, password } = req.body;
 
-      const existingUser = await this.userService.findUserByUsername(
-        username,
-        db,
-      );
+      const existingUser = await this.userService.findUserByUsername(username);
 
       if (!existingUser) {
         throw new Error('User does not exist');
       }
 
-      const token = await this.userService.login(username, password, db);
+      const token = await this.userService.login(username, password);
 
       if (!token) {
         throw new Error('Username or password is not valid');
@@ -105,12 +90,11 @@ export class UserController implements IUserController {
   getProfile = async (
     req: express.Request<{}, {}, GetProfileRequest>,
     res: express.Response,
-    db: IDBConn,
   ): Promise<any> => {
     try {
       const { id } = req.body.payload;
 
-      const profile = await this.userService.getProfile(id, db);
+      const profile = await this.userService.getProfile(id);
 
       if (!profile) {
         throw new Error('Could not get profile');
