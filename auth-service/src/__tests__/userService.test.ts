@@ -1,7 +1,6 @@
 import { jest, describe, expect, beforeEach, it } from '@jest/globals';
 import { IUserRepository } from '../repositories/userRepository';
 import { UserService } from '../services/userService';
-import { IDBConn } from '../types/db';
 import { IUser } from '../types/user';
 import { HydratedDocument, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
@@ -16,7 +15,6 @@ describe('UserService', () => {
   let username: string;
   let password: string;
   let id: string;
-  let db: IDBConn;
   let mockUser: HydratedDocument<IUser>;
 
   beforeEach(() => {
@@ -31,8 +29,6 @@ describe('UserService', () => {
     username = 'testuser';
     password = 'testpassword';
     id = 'ffffffffffffffffffffffff';
-
-    db = {} as IDBConn;
 
     mockUser = {
       _id: new Types.ObjectId('ffffffffffffffffffffffff'),
@@ -59,18 +55,15 @@ describe('UserService', () => {
         })) as unknown as HydratedDocument<IUser>[];
       });
 
-      const result = await service.register(username, password, db);
+      const result = await service.register(username, password);
 
-      expect(userRepositoryMock.createUsers).toHaveBeenCalledWith(
-        [
-          expect.objectContaining({
-            username,
-            password: expect.any(String),
-            role: '',
-          }),
-        ],
-        db,
-      );
+      expect(userRepositoryMock.createUsers).toHaveBeenCalledWith([
+        expect.objectContaining({
+          username,
+          password: expect.any(String),
+          role: '',
+        }),
+      ]);
 
       expect(capturedHashedPassword).toBeDefined();
 
@@ -92,7 +85,7 @@ describe('UserService', () => {
     it('should return null when repository throws an error', async () => {
       userRepositoryMock.createUsers.mockRejectedValue(new Error('DB error'));
 
-      const result = await service.register(username, password, db);
+      const result = await service.register(username, password);
 
       expect(result).toBeNull();
     });
@@ -102,11 +95,10 @@ describe('UserService', () => {
     it('should call getUserByUsername on repository', async () => {
       userRepositoryMock.getUserByUsername.mockResolvedValue(mockUser);
 
-      const result = await service.findUserByUsername(username, db);
+      const result = await service.findUserByUsername(username);
 
       expect(userRepositoryMock.getUserByUsername).toHaveBeenCalledWith(
         username,
-        db,
       );
       expect(result).toEqual(mockUser);
     });
@@ -116,7 +108,7 @@ describe('UserService', () => {
         new Error('Not found'),
       );
 
-      const result = await service.findUserByUsername(username, db);
+      const result = await service.findUserByUsername(username);
 
       expect(result).toBeNull();
     });
@@ -128,11 +120,10 @@ describe('UserService', () => {
       (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
       (jwt.sign as jest.Mock).mockReturnValue('fake_jwt_token');
 
-      const token = await service.login('test_user', 'password123', db);
+      const token = await service.login('test_user', 'password123');
 
       expect(userRepositoryMock.getUserByUsername).toHaveBeenCalledWith(
         'test_user',
-        db,
       );
       expect(bcrypt.compareSync).toHaveBeenCalledWith(
         'password123',
@@ -151,7 +142,7 @@ describe('UserService', () => {
     it('should return null if user is not found', async () => {
       userRepositoryMock.getUserByUsername.mockResolvedValue(null);
 
-      const token = await service.login('nonexistent_user', 'password123', db);
+      const token = await service.login('nonexistent_user', 'password123');
 
       expect(token).toBeNull();
     });
@@ -160,7 +151,7 @@ describe('UserService', () => {
       userRepositoryMock.getUserByUsername.mockResolvedValue(mockUser);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
 
-      const token = await service.login('test_user', 'wrong_password', db);
+      const token = await service.login('test_user', 'wrong_password');
 
       expect(token).toBeNull();
     });
@@ -170,7 +161,7 @@ describe('UserService', () => {
         new Error('DB error'),
       );
 
-      const token = await service.login('test_user', 'password123', db);
+      const token = await service.login('test_user', 'password123');
 
       expect(token).toBeNull();
     });
@@ -180,9 +171,9 @@ describe('UserService', () => {
     it('should get user and return his profile', async () => {
       userRepositoryMock.getUserById.mockResolvedValue(mockUser);
 
-      const user = await service.getProfile(id, db);
+      const user = await service.getProfile(id);
 
-      expect(userRepositoryMock.getUserById).toHaveBeenCalledWith(id, db);
+      expect(userRepositoryMock.getUserById).toHaveBeenCalledWith(id);
       expect(user).toStrictEqual({
         id: mockUser._id.toString(),
         username: mockUser.username,
@@ -193,7 +184,7 @@ describe('UserService', () => {
     it('should return null if user is not found', async () => {
       userRepositoryMock.getUserById.mockResolvedValue(null);
 
-      const user = await service.getProfile('gggggggggggggggggggggggg', db);
+      const user = await service.getProfile('gggggggggggggggggggggggg');
 
       expect(user).toBeNull();
     });
@@ -201,7 +192,7 @@ describe('UserService', () => {
     it('should return null and handle exceptions', async () => {
       userRepositoryMock.getUserById.mockRejectedValue(new Error('DB error'));
 
-      const user = await service.getProfile(id, db);
+      const user = await service.getProfile(id);
 
       expect(user).toBeNull();
     });

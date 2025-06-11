@@ -30,7 +30,7 @@ describe('UserRepository', () => {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<IDBConn>;
 
-    repository = new UserRepository();
+    repository = new UserRepository(dbMock);
   });
 
   describe('createUser', () => {
@@ -41,7 +41,7 @@ describe('UserRepository', () => {
       ] as unknown as HydratedDocument<IUser>[];
       dbMock.create.mockResolvedValue(createdUser);
 
-      const result = await repository.createUsers([user], dbMock);
+      const result = await repository.createUsers([user]);
 
       expect(dbMock.create).toHaveBeenCalledWith([user]);
       expect(result).toBe(createdUser);
@@ -52,10 +52,9 @@ describe('UserRepository', () => {
       dbMock.create.mockRejectedValue(error);
 
       await expect(
-        repository.createUsers(
-          [{ username: 'test', password: 'pass', role: '' }],
-          dbMock,
-        ),
+        repository.createUsers([
+          { username: 'test', password: 'pass', role: '' },
+        ]),
       ).rejects.toThrow('DB error');
     });
   });
@@ -71,7 +70,7 @@ describe('UserRepository', () => {
       } as unknown as HydratedDocument<IUser>;
 
       dbMock.findOne.mockResolvedValue(userDoc);
-      const result = await repository.getUserByUsername(username, dbMock);
+      const result = await repository.getUserByUsername(username);
 
       expect(dbMock.findOne).toHaveBeenCalledWith({ username });
       expect(result).toBe(userDoc);
@@ -81,7 +80,7 @@ describe('UserRepository', () => {
       const username = 'nonexistent';
       dbMock.findOne.mockResolvedValue(null);
 
-      const result = await repository.getUserByUsername(username, dbMock);
+      const result = await repository.getUserByUsername(username);
       expect(result).toBe(null);
     });
 
@@ -90,9 +89,9 @@ describe('UserRepository', () => {
       const error = new Error('DB error');
       dbMock.findOne.mockRejectedValue(error);
 
-      await expect(
-        repository.getUserByUsername(username, dbMock),
-      ).rejects.toThrow('DB error');
+      await expect(repository.getUserByUsername(username)).rejects.toThrow(
+        'DB error',
+      );
     });
   });
 
@@ -107,7 +106,7 @@ describe('UserRepository', () => {
       } as unknown as HydratedDocument<IUser>;
 
       dbMock.findOne.mockResolvedValue(userDoc);
-      const result = await repository.getUserById(id, dbMock);
+      const result = await repository.getUserById(id);
 
       expect(dbMock.findOne).toHaveBeenCalledWith({
         _id: new Types.ObjectId(id),
@@ -119,7 +118,7 @@ describe('UserRepository', () => {
       const username = 'nonexistent';
       dbMock.findOne.mockResolvedValue(null);
 
-      const result = await repository.getUserByUsername(username, dbMock);
+      const result = await repository.getUserByUsername(username);
       expect(result).toBe(null);
     });
 
@@ -128,9 +127,9 @@ describe('UserRepository', () => {
       const error = new Error('DB error');
       dbMock.findOne.mockRejectedValue(error);
 
-      await expect(
-        repository.getUserByUsername(username, dbMock),
-      ).rejects.toThrow('DB error');
+      await expect(repository.getUserByUsername(username)).rejects.toThrow(
+        'DB error',
+      );
     });
   });
 });
