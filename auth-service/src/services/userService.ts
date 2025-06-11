@@ -59,6 +59,10 @@ export class UserService implements IUserService {
         user.role,
       );
 
+      if (!permissions) {
+        throw new Error('Error in getPermissionsForRole');
+      }
+
       const token = jwt.sign(
         {
           id: user._id,
