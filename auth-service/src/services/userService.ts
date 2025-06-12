@@ -29,10 +29,10 @@ export class UserService implements IUserService {
   register = async (username: string, password: string) => {
     try {
       const salt = bcrypt.genSaltSync(10);
-      const hash = bcrypt.hashSync(password, salt);
+      const hashedPassword = bcrypt.hashSync(password, salt);
 
       const newUsers = await this.userRepository.createUsers([
-        { username: username, password: hash, role: 'user' },
+        { username: username, hash: hashedPassword, role: 'user' },
       ]);
 
       return newUsers[0];
@@ -50,7 +50,7 @@ export class UserService implements IUserService {
         throw new Error('User not found');
       }
 
-      const isMatch = bcrypt.compareSync(password, user.password);
+      const isMatch = bcrypt.compareSync(password, user.hash);
 
       if (!isMatch) {
         throw new Error('Invalid password');

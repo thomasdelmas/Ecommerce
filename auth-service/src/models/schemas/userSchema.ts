@@ -6,7 +6,7 @@ export const UserSchema = new Schema<IUser>({
     type: String,
     required: true,
   },
-  password: {
+  hash: {
     type: String,
     required: true,
   },

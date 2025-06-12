@@ -48,8 +48,7 @@ describe('UserController - register', () => {
       userServiceMock.register.mockResolvedValue({
         _id: 'someid',
         username: 'testuser',
-        password: 'hashedpass',
-        role: '',
+        role: 'user',
       } as unknown as HydratedDocument<IUser>);
 
       await controller.register(req as Request, res as Response);
@@ -62,6 +61,11 @@ describe('UserController - register', () => {
         'testpass',
       );
       expect(res.json).toHaveBeenCalledWith({
+				user: {
+					id: 'someid',
+					username: 'testuser',
+					role: 'user',
+				},
         message: 'Created user testuser',
       });
     });

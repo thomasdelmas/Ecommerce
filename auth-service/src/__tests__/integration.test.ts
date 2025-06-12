@@ -34,7 +34,7 @@ describe('AuthService - Integration tests', () => {
         .send(req)
         .expect(201);
 
-      expect(res.body).toEqual({ message: 'Created user ' + req.username });
+      expect(res.body.message).toEqual('Created user ' + req.username);
     });
 
     it('should fail if passwords do not match', async () => {

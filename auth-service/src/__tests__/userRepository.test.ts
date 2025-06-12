@@ -35,7 +35,7 @@ describe('UserRepository', () => {
 
   describe('createUser', () => {
     it('should call db.create with user data and return result', async () => {
-      const user: IUser = { username: 'test', password: 'hashed', role: '' };
+      const user: IUser = { username: 'test', hash: 'hashed', role: '' };
       const createdUser = [
         { ...user, _id: 'someid' },
       ] as unknown as HydratedDocument<IUser>[];
@@ -53,7 +53,7 @@ describe('UserRepository', () => {
 
       await expect(
         repository.createUsers([
-          { username: 'test', password: 'pass', role: '' },
+          { username: 'test', hash: 'pass', role: '' },
         ]),
       ).rejects.toThrow('DB error');
     });

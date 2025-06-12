@@ -16,6 +16,7 @@ describe('UserService', () => {
   let service: UserService;
   let username: string;
   let password: string;
+	let hash: string;
   let id: string;
   let mockUser: HydratedDocument<IUser>;
 
@@ -39,7 +40,7 @@ describe('UserService', () => {
     mockUser = {
       _id: new Types.ObjectId('ffffffffffffffffffffffff'),
       username,
-      password,
+			hash: 'hashed_password',
       role: 'user',
     } as unknown as HydratedDocument<IUser>;
   });
@@ -52,7 +53,7 @@ describe('UserService', () => {
       let capturedHashedPassword: string | undefined;
 
       userRepositoryMock.createUsers.mockImplementation(async (usersData) => {
-        capturedHashedPassword = usersData[0].password;
+        capturedHashedPassword = usersData[0].hash;
         return usersData.map((user) => ({
           ...user,
           _id: new Types.ObjectId('ffffffffffffffffffffffff'),
@@ -66,7 +67,7 @@ describe('UserService', () => {
       expect(userRepositoryMock.createUsers).toHaveBeenCalledWith([
         expect.objectContaining({
           username,
-          password: expect.any(String),
+          hash: 'hashed_password',
           role: 'user',
         }),
       ]);
@@ -81,8 +82,9 @@ describe('UserService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
+					_id: new Types.ObjectId('ffffffffffffffffffffffff'),
+					hash: capturedHashedPassword,
           username,
-          password: capturedHashedPassword,
           role: 'user',
         }),
       );
@@ -139,7 +141,7 @@ describe('UserService', () => {
       );
       expect(bcrypt.compareSync).toHaveBeenCalledWith(
         'password123',
-        'testpassword',
+        mockUser.hash,
       );
       expect(roleServiceMock.getPermissionsForRole).toHaveBeenCalledWith(
         'user',
