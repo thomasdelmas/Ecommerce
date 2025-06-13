@@ -16,7 +16,6 @@ describe('UserService', () => {
   let service: UserService;
   let username: string;
   let password: string;
-	let hash: string;
   let id: string;
   let mockUser: HydratedDocument<IUser>;
 
@@ -25,6 +24,7 @@ describe('UserService', () => {
       createUsers: jest.fn(),
       getUserByUsername: jest.fn(),
       getUserById: jest.fn(),
+      deleteUsers: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
 
     roleServiceMock = {
@@ -40,7 +40,6 @@ describe('UserService', () => {
     mockUser = {
       _id: new Types.ObjectId('ffffffffffffffffffffffff'),
       username,
-			hash: 'hashed_password',
       role: 'user',
     } as unknown as HydratedDocument<IUser>;
   });
@@ -82,8 +81,8 @@ describe('UserService', () => {
 
       expect(result).toEqual(
         expect.objectContaining({
-					_id: new Types.ObjectId('ffffffffffffffffffffffff'),
-					hash: capturedHashedPassword,
+          _id: new Types.ObjectId('ffffffffffffffffffffffff'),
+          hash: capturedHashedPassword,
           username,
           role: 'user',
         }),
@@ -239,6 +238,35 @@ describe('UserService', () => {
       );
 
       const user = await service.getProfile(id);
+
+      expect(user).toBeNull();
+    });
+  });
+
+  describe('DeleteUsers', () => {
+    it('should deleteUsers and return delete count', async () => {
+      userRepositoryMock.deleteUsers.mockResolvedValue({
+        acknowledged: true,
+        deletedCount: 2,
+      });
+
+      const count = await service.deleteUsers([
+        'ffffffffffffffffffffffff',
+        'gggggggggggggggggggggggg',
+      ]);
+
+      expect(count).toBe(2);
+    });
+
+    it('should return null and handle exceptions', async () => {
+      userRepositoryMock.deleteUsers.mockRejectedValue(
+        new Error('USERDB error'),
+      );
+
+      const user = await service.deleteUsers([
+        'ffffffffffffffffffffffff',
+        'gggggggggggggggggggggggg',
+      ]);
 
       expect(user).toBeNull();
     });
