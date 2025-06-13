@@ -179,7 +179,7 @@ export class UserController implements IUserController {
       const userId = req.params.id;
 
       if (userId !== tokenId) {
-        res.status(403).send('Forbidden');
+        res.status(403).json({ message: 'Forbidden'});
         return;
       }
 

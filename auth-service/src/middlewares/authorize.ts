@@ -9,7 +9,7 @@ export const authorize = (requiredPermissions: string[]) => {
     const jwt = req.body.payload;
 
     if (!jwt.permissions) {
-      return res.status(403).send('Not valid permission');
+      return res.status(403).json({ message: 'Not valid permission' });
     }
 
     const isAuthorized = requiredPermissions.every((reqPerm) =>
@@ -17,7 +17,7 @@ export const authorize = (requiredPermissions: string[]) => {
     );
 
     if (!isAuthorized) {
-      return res.status(403).send('Forbidden');
+      return res.status(403).json({ message: 'Forbidden' });
     }
 
     next();
