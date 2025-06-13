@@ -44,12 +44,15 @@ describe('UserController - register', () => {
     });
 
     it('should create user successfully', async () => {
+      const mockUser = {
+        toJSON: (): { id: string; username: string; role: string } => ({
+          id: 'someid',
+          username: 'testuser',
+          role: 'user',
+        }),
+      };
       userServiceMock.findUserByUsername.mockResolvedValue(null);
-      userServiceMock.register.mockResolvedValue({
-        _id: 'someid',
-        username: 'testuser',
-        role: 'user',
-      } as unknown as HydratedDocument<IUser>);
+      userServiceMock.register.mockResolvedValue(mockUser as any);
 
       await controller.register(req as Request, res as Response);
 
@@ -61,11 +64,11 @@ describe('UserController - register', () => {
         'testpass',
       );
       expect(res.json).toHaveBeenCalledWith({
-				user: {
-					id: 'someid',
-					username: 'testuser',
-					role: 'user',
-				},
+        user: {
+          id: 'someid',
+          username: 'testuser',
+          role: 'user',
+        },
         message: 'Created user testuser',
       });
     });
