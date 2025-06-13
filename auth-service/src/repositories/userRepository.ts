@@ -8,7 +8,7 @@ export type IUserRepository = {
     username: IUser['username'],
   ) => Promise<HydratedDocument<IUser> | null>;
   getUserById: (id: string) => Promise<HydratedDocument<IUser> | null>;
-	deleteUsers: (ids: string[]) => Promise<DeleteResult | null>
+  deleteUsers: (ids: string[]) => Promise<DeleteResult>;
 };
 
 export class UserRepository implements IUserRepository {
