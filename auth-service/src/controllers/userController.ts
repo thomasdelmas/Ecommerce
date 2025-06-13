@@ -15,7 +15,6 @@ export type IDeleteUserParams = {
 };
 
 export type IDeleteUsersReqBody = {
-  payload: JwtPayload;
   userIds: string[];
 };
 
@@ -174,7 +173,7 @@ export class UserController implements IUserController {
       const result = await this.userService.deleteUsers([userId]);
 
       if (!result) {
-        throw new Error('Could not delete users');
+        throw new Error('Could not delete user');
       }
 
       res.status(200).json({
