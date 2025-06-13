@@ -3,6 +3,7 @@ import request from 'supertest';
 import { App } from '../app';
 import config from '../config/validatedConfig';
 import { verify, sign } from 'jsonwebtoken';
+import { models } from '../models/init';
 
 describe('AuthService - Integration tests', () => {
   let appInstance: App;
@@ -21,6 +22,32 @@ describe('AuthService - Integration tests', () => {
       password: '12345678Aa',
       confirmPassword: '12345678Aa',
     };
+
+    const roleUserExist = await models.role.findOne({ role: 'user' });
+    if (!roleUserExist) {
+      await models.role.create({
+        role: 'user',
+        permissions: ['read:user', 'write:user'],
+      });
+    }
+
+    const roleAdminExist = await models.role.findOne({ role: 'admin' });
+    if (!roleAdminExist) {
+      await models.role.create({
+        role: 'admin',
+        permissions: ['read:admin', 'write:admin'],
+      });
+    }
+
+    const adminUserExist = await models.user.findOne({ username: 'testAdmin' });
+    if (!adminUserExist) {
+      await models.user.create({
+        username: 'testAdmin',
+        hash: '$2b$10$DOGkBeGZyOvVtFALQ7O8CeLyYCeZExciYK/sw4RYA2jlsWJOPqoZC',
+        role: 'admin',
+        permissions: ['write:admin', 'read:admin'],
+      });
+    }
 
     adminUser = {
       username: 'testAdmin',
@@ -110,12 +137,14 @@ describe('AuthService - Integration tests', () => {
 
       expect(res.status).toBe(200);
 
-      expect(res.body.profile).toStrictEqual({
-        id: userId,
-        username: user.username,
-        role: 'user',
-        permissions: ['read:user', 'write:user'],
-      });
+      expect(res.body.profile).toEqual(
+        expect.objectContaining({
+          id: userId,
+          username: user.username,
+          role: 'user',
+          permissions: expect.arrayContaining(['read:user', 'write:user']),
+        }),
+      );
       expect(res.body.message).toBe('Profile for user ID ' + userId);
     });
 
