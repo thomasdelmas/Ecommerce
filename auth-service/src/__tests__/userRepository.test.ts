@@ -10,7 +10,7 @@ import {
 import { UserRepository } from '../repositories/userRepository';
 import { IUserModel } from '../types/db';
 import { IUser } from '../types/user';
-import { HydratedDocument, Types } from 'mongoose';
+import { DeleteResult, HydratedDocument, Types } from 'mongoose';
 
 describe('UserRepository', () => {
   let repository: UserRepository;
@@ -28,6 +28,7 @@ describe('UserRepository', () => {
     dbMock = {
       create: jest.fn(),
       findOne: jest.fn(),
+      deleteMany: jest.fn(),
     } as unknown as jest.Mocked<IUserModel>;
 
     repository = new UserRepository(dbMock);
@@ -52,9 +53,7 @@ describe('UserRepository', () => {
       dbMock.create.mockRejectedValue(error);
 
       await expect(
-        repository.createUsers([
-          { username: 'test', hash: 'pass', role: '' },
-        ]),
+        repository.createUsers([{ username: 'test', hash: 'pass', role: '' }]),
       ).rejects.toThrow('DB error');
     });
   });
@@ -130,6 +129,43 @@ describe('UserRepository', () => {
       await expect(repository.getUserByUsername(username)).rejects.toThrow(
         'DB error',
       );
+    });
+  });
+
+  describe('deleteUsers', () => {
+    it('should call db.deleteMany with ids filter and return DeleteResult', async () => {
+      const ids = ['ffffffffffffffffffffffff', 'gggggggggggggggggggggggg'];
+      const deleteResult = {
+        acknoledged: true,
+        deletedCount: 2,
+      } as unknown as DeleteResult;
+
+      dbMock.deleteMany.mockResolvedValue(deleteResult);
+
+      const result = await repository.deleteUsers(ids);
+
+      expect(dbMock.deleteMany).toHaveBeenCalledWith({ _id: { $in: ids } });
+      expect(result).toBe(deleteResult);
+    });
+
+    it('should return null if db.deleteMany returns without having deleted entry', async () => {
+      dbMock.deleteMany.mockResolvedValue({
+        acknowledged: false,
+        deletedCount: 0,
+      });
+
+      const result = await repository.deleteUsers(['ffffffffffffffffffffffff']);
+      expect(result.acknowledged).toBe(false);
+      expect(result.deletedCount).toBe(0);
+    });
+
+    it('should propagate errors if db.deleteMany rejects', async () => {
+      const error = new Error('DB error');
+      dbMock.deleteMany.mockRejectedValue(error);
+
+      await expect(
+        repository.deleteUsers(['ffffffffffffffffffffffff']),
+      ).rejects.toThrow('DB error');
     });
   });
 });
