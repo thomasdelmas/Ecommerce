@@ -9,6 +9,8 @@ describe('AuthService - Integration tests', () => {
   let user: any;
   let jwt: string;
   let userId: string;
+  let adminUser: any;
+  let adminJwt: string;
 
   beforeAll(async () => {
     appInstance = new App();
@@ -19,6 +21,19 @@ describe('AuthService - Integration tests', () => {
       password: '12345678Aa',
       confirmPassword: '12345678Aa',
     };
+
+    adminUser = {
+      username: 'testAdmin',
+      password: '12345678Aa',
+    };
+    adminJwt = await request(appInstance.app)
+      .post('/login')
+      .send({
+        username: adminUser.username,
+        password: adminUser.password,
+      })
+      .expect(200)
+      .then((res) => res.body.token);
   });
 
   afterAll(async () => {
@@ -157,6 +172,107 @@ describe('AuthService - Integration tests', () => {
 
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Token expired');
+    });
+  });
+
+  describe('user delete endpoint', () => {
+    it('should delete user successfully and return confirmation', async () => {
+      const res = await request(appInstance.app)
+        .delete('/user/' + userId)
+        .set({ Authorization: jwt })
+        .send();
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toStrictEqual(
+        'Successfuly delete user with id: ' + userId,
+      );
+    });
+
+    it('should fail if invalid jwt', async () => {
+      const res = await request(appInstance.app)
+        .delete('/user/' + 'ffffffffffffffffffffffff')
+        .set({ Authorization: 'badToken' })
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe('Invalid token');
+    });
+
+    it('should fail if jwt id and param id mismatch', async () => {
+      const res = await request(appInstance.app)
+        .delete('/user/' + 'ffffffffffffffffffffffff')
+        .set({ Authorization: jwt })
+        .send();
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toBe('Forbidden');
+    });
+  });
+
+  describe('admin delete endpoint', () => {
+    let user1;
+    let user2;
+    let id1: string;
+    let id2: string;
+
+    beforeAll(async () => {
+      user1 = {
+        username: 'test_user1' + Date.now(),
+        password: '12345678Aa',
+        confirmPassword: '12345678Aa',
+      };
+
+      user2 = {
+        username: 'test_user2' + Date.now(),
+        password: '12345678Aa',
+        confirmPassword: '12345678Aa',
+      };
+
+      id1 = await request(appInstance.app)
+        .post('/register')
+        .send(user1)
+        .expect(201)
+        .then((res) => res.body.user.id);
+      id2 = await request(appInstance.app)
+        .post('/register')
+        .send(user2)
+        .expect(201)
+        .then((res) => res.body.user.id);
+    });
+
+    it('should delete users successfully and return confirmation', async () => {
+      const req = {
+        userIds: [id1, id2],
+      };
+      const res = await request(appInstance.app)
+        .delete('/user')
+        .set({ Authorization: adminJwt })
+        .send(req);
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toStrictEqual(
+        'Successfuly delete users with ids: ' + req.userIds.join(', '),
+      );
+    });
+
+    it('should fail if invalid jwt', async () => {
+      const res = await request(appInstance.app)
+        .delete('/user')
+        .set({ Authorization: 'badToken' })
+        .send();
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe('Invalid token');
+    });
+
+    it('should fail if jwt permissions does not match', async () => {
+      const res = await request(appInstance.app)
+        .delete('/user')
+        .set({ Authorization: jwt })
+        .send();
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toBe('Forbidden');
     });
   });
 });
