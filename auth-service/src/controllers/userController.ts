@@ -38,11 +38,11 @@ export type IUserController = {
     req: express.Request<RegisterRequest>,
     res: express.Response,
   ) => Promise<any>;
-	deleteUsers: (
-		req: express.Request<{}, {}, IDeleteUsersReqBody>,
-		res: express.Response,
-	) => Promise<any>;
-	deleteUser: (
+  deleteUsers: (
+    req: express.Request<{}, {}, IDeleteUsersReqBody>,
+    res: express.Response,
+  ) => Promise<any>;
+  deleteUser: (
     req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
     res: express.Response,
   ) => Promise<any>;
@@ -140,13 +140,7 @@ export class UserController implements IUserController {
     res: express.Response,
   ): Promise<any> => {
     try {
-      const { role } = req.body.payload;
       const { userIds } = req.body;
-
-      if (role != 'admin') {
-        res.status(403).send('Forbidden');
-        return;
-      }
 
       const result = await this.userService.deleteUsers(userIds);
 
@@ -155,8 +149,7 @@ export class UserController implements IUserController {
       }
 
       res.status(200).json({
-        userCount: result,
-        message: 'Successfuly delete ' + result + ' users',
+        message: 'Successfuly delete users with ids: ' + userIds.join(', '),
       });
     } catch (e) {
       if (e instanceof Error) {
@@ -174,7 +167,7 @@ export class UserController implements IUserController {
       const userId = req.params.id;
 
       if (userId !== tokenId) {
-        res.status(403).json({ message: 'Forbidden'});
+        res.status(403).json({ message: 'Forbidden' });
         return;
       }
 
@@ -185,8 +178,7 @@ export class UserController implements IUserController {
       }
 
       res.status(200).json({
-        userCount: result,
-        message: 'Successfuly delete ' + result + ' users',
+        message: 'Successfuly delete user with id: ' + userId,
       });
     } catch (e) {
       if (e instanceof Error) {
