@@ -70,15 +70,10 @@ export class UserController implements IUserController {
         throw new Error('Could not register user');
       }
 
-			const { hash, _id, ...safeUser } = createdUser;
-
-			res.status(201).json({
-				user: {
-					id: _id,
-					...safeUser,
-				},
-				message: 'Created user ' + username,
-			});
+      res.status(201).json({
+        user: createdUser.toJSON(),
+        message: 'Created user ' + username,
+      });
     } catch (e) {
       if (e instanceof Error) {
         res.status(400).json({ message: e.message });
