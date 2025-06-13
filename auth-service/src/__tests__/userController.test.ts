@@ -6,7 +6,12 @@ import {
   beforeAll,
   it,
 } from '@jest/globals';
-import { UserController } from '../controllers/userController';
+import {
+  IDeleteUserParams,
+  IDeleteUserReqBody,
+  IDeleteUsersReqBody,
+  UserController,
+} from '../controllers/userController';
 import { IUserService } from '../services/userService';
 import { Request, Response } from 'express';
 import { HydratedDocument } from 'mongoose';
@@ -26,6 +31,7 @@ describe('UserController - register', () => {
       register: jest.fn(),
       login: jest.fn(),
       getProfile: jest.fn(),
+      deleteUsers: jest.fn(),
     } as unknown as jest.Mocked<IUserService>;
 
     controller = new UserController(userServiceMock);
@@ -227,6 +233,128 @@ describe('UserController - register', () => {
       userServiceMock.getProfile.mockRejectedValue(new Error('DB error'));
 
       await controller.getProfile(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+    });
+  });
+
+  describe('deleteUser', () => {
+    let id: string;
+
+    beforeAll(() => {
+      id = 'ffffffffffffffffffffffff';
+    });
+
+    it('should delete a user succesfully', async () => {
+      req = { body: { payload: { id: id } }, params: { id: id } };
+
+      userServiceMock.deleteUsers.mockResolvedValue(1);
+
+      await controller.deleteUser(
+        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+        res as Response,
+      );
+
+      expect(userServiceMock.deleteUsers).toHaveBeenCalledWith([id]);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfuly delete user with id: ' + id,
+      });
+    });
+
+    it('should return Forbidden error if IDs mismatch', async () => {
+      req = { body: { payload: { id: id } }, params: { id: 'differentId' } };
+
+      await controller.deleteUser(
+        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+        res as Response,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Forbidden' });
+    });
+
+    it('should return error if deleteUsers return null', async () => {
+      req = { body: { payload: { id: id } }, params: { id: id } };
+
+      userServiceMock.deleteUsers.mockResolvedValue(null);
+
+      await controller.deleteUser(
+        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+        res as Response,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Could not delete user',
+      });
+    });
+
+    it('should handle service errors gracefully', async () => {
+      req = { body: { payload: { id: id } }, params: { id: id } };
+
+      userServiceMock.deleteUsers.mockRejectedValue(new Error('DB error'));
+
+      await controller.deleteUser(
+        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+        res as Response,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+    });
+  });
+
+  describe('deleteUsers', () => {
+    let id1: string;
+    let id2: string;
+
+    beforeAll(() => {
+      id1 = 'ffffffffffffffffffffffff';
+      id2 = 'gggggggggggggggggggggggg';
+    });
+
+    it('should delete a user succesfully', async () => {
+      req = { body: { userIds: [id1, id2] } };
+
+      userServiceMock.deleteUsers.mockResolvedValue(2);
+
+      await controller.deleteUsers(
+        req as Request<{}, {}, IDeleteUsersReqBody>,
+        res as Response,
+      );
+
+      expect(userServiceMock.deleteUsers).toHaveBeenCalledWith([id1, id2]);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Successfuly delete users with ids: ' + [id1, id2].join(', '),
+      });
+    });
+
+    it('should return error if deleteUsers return null', async () => {
+      req = { body: { userIds: [id1, id2] } };
+
+      userServiceMock.deleteUsers.mockResolvedValue(null);
+
+      await controller.deleteUsers(
+        req as Request<{}, {}, IDeleteUsersReqBody>,
+        res as Response,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Could not delete users',
+      });
+    });
+
+    it('should handle service errors gracefully', async () => {
+      req = { body: { userIds: [id1, id2] } };
+
+      userServiceMock.deleteUsers.mockRejectedValue(new Error('DB error'));
+
+      await controller.deleteUsers(
+        req as Request<{}, {}, IDeleteUsersReqBody>,
+        res as Response,
+      );
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
