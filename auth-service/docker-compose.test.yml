@@ -1,0 +1,24 @@
+services:
+  auth:
+    build:
+      context: .
+    env_file:
+      - .env.test
+    environment:
+      NODE_ENV: test
+      MONGO_URI: mongodb://user-mongodb:27017/
+    command: npm test
+    depends_on:
+      - user-mongodb
+
+  user-mongodb:
+    image: mongodb/mongodb-community-server:latest
+    environment:
+      MONGO_INITDB_DATABASE: test_db
+    volumes:
+      - userTestDB:/data/db
+    ports:
+      - '27017'
+
+volumes:
+  userTestDB:
