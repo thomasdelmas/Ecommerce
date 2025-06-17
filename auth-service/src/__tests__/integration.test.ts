@@ -27,7 +27,7 @@ describe('AuthService - Integration tests', () => {
     if (!roleUserExist) {
       await models.role.create({
         role: 'user',
-        permissions: ['read:user', 'write:user'],
+        permissions: ['read:product'],
       });
     }
 
@@ -35,7 +35,14 @@ describe('AuthService - Integration tests', () => {
     if (!roleAdminExist) {
       await models.role.create({
         role: 'admin',
-        permissions: ['read:admin', 'write:admin'],
+        permissions: [
+          'read:user',
+          'write:user',
+          'delete:user',
+          'read:product',
+          'write:product',
+          'delete:product',
+        ],
       });
     }
 
@@ -142,7 +149,7 @@ describe('AuthService - Integration tests', () => {
           id: userId,
           username: user.username,
           role: 'user',
-          permissions: expect.arrayContaining(['read:user', 'write:user']),
+          permissions: expect.arrayContaining(['read:product']),
         }),
       );
       expect(res.body.message).toBe('Profile for user ID ' + userId);
@@ -285,20 +292,26 @@ describe('AuthService - Integration tests', () => {
     });
 
     it('should fail if invalid jwt', async () => {
+      const req = {
+        userIds: [id1, id2],
+      };
       const res = await request(appInstance.app)
         .delete('/user')
         .set({ Authorization: 'badToken' })
-        .send();
+        .send(req);
 
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('Invalid token');
     });
 
     it('should fail if jwt permissions does not match', async () => {
+      const req = {
+        userIds: [id1, id2],
+      };
       const res = await request(appInstance.app)
         .delete('/user')
         .set({ Authorization: jwt })
-        .send();
+        .send(req);
 
       expect(res.status).toBe(403);
       expect(res.body.message).toBe('Forbidden');

@@ -15,7 +15,7 @@ export const validateRequest = (
         message: err.msg,
       })),
     });
-		return;
+    return;
   }
   next();
 };
