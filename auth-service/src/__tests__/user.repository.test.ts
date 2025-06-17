@@ -7,7 +7,7 @@ import {
   afterAll,
   beforeAll,
 } from '@jest/globals';
-import { UserRepository } from '../user/user.repository';
+import UserRepository from '../user/user.repository';
 import { DeleteResult, HydratedDocument, Types } from 'mongoose';
 import { IUserModel } from '../types/db.types';
 import { IUser } from '../user/user.types';

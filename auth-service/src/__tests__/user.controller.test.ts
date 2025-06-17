@@ -6,7 +6,7 @@ import {
   beforeAll,
   it,
 } from '@jest/globals';
-import { UserController } from '../user/user.controller';
+import UserController from '../user/user.controller';
 import { Request, Response } from 'express';
 import { HydratedDocument } from 'mongoose';
 import type {

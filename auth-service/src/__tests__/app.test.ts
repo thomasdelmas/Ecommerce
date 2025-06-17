@@ -12,7 +12,8 @@ import mongoose from 'mongoose';
 //  Mock first
 jest.mock('../user/user.controller', () => {
   return {
-    UserController: jest.fn().mockImplementation(() => ({
+    __esModule: true,
+    default: jest.fn().mockImplementation(() => ({
       register: jest.fn((req: any, res: any) =>
         res.status(201).send({ ok: true }),
       ),

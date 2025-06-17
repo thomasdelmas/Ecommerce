@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import type { IUserModel } from '../types/db.types.js';
 import type { IUser, IUserRepository } from './user.types.js';
 
-export class UserRepository implements IUserRepository {
+class UserRepository implements IUserRepository {
   constructor(private db: IUserModel) {}
 
   createUsers = async (users: IUser[]) => {
@@ -23,3 +23,5 @@ export class UserRepository implements IUserRepository {
     return await this.db.deleteMany({ _id: { $in: ids } });
   };
 }
+
+export default UserRepository;

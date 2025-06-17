@@ -9,7 +9,7 @@ import type {
   IUserService,
 } from './user.types.js';
 
-export class UserController implements IUserController {
+class UserController implements IUserController {
   constructor(private userService: IUserService) {}
 
   register = async (
@@ -148,3 +148,5 @@ export class UserController implements IUserController {
     }
   };
 }
+
+export default UserController;

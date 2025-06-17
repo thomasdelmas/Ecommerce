@@ -21,11 +21,11 @@ import {
 } from './validators/userValidator.js';
 import { verifyToken } from './middlewares/verifyToken.js';
 import { authorize } from './middlewares/authorize.js';
-import { UserController } from './user/user.controller.js';
-import { UserRepository } from './user/user.repository.js';
-import { RoleService } from './role/role.service.js';
-import { UserService } from './user/user.service.js';
-import { RoleRepository } from './role/role.repository.js';
+import UserController from './user/user.controller.js';
+import UserRepository from './user/user.repository.js';
+import RoleService from './role/role.service.js';
+import UserService from './user/user.service.js';
+import RoleRepository from './role/role.repository.js';
 
 export class App {
   app: express.Application;

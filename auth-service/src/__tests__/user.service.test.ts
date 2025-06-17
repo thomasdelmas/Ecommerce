@@ -1,5 +1,5 @@
 import { jest, describe, expect, beforeEach, it } from '@jest/globals';
-import { UserService } from '../user/user.service';
+import UserService from '../user/user.service';
 import { HydratedDocument, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';

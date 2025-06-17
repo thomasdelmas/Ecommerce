@@ -1,6 +1,6 @@
 import type { IRoleRepository, IRoleService } from './role.types';
 
-export class RoleService implements IRoleService {
+class RoleService implements IRoleService {
   constructor(private roleRepository: IRoleRepository) {}
 
   getPermissionsForRole = async (name: string) => {
@@ -14,3 +14,5 @@ export class RoleService implements IRoleService {
     }
   };
 }
+
+export default RoleService;

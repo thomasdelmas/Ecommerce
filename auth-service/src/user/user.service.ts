@@ -5,7 +5,7 @@ import type { IProfile } from '../types/profile.types.js';
 import type { IRoleService } from '../role/role.types.js';
 import type { IUserRepository, IUserService } from './user.types.js';
 
-export class UserService implements IUserService {
+class UserService implements IUserService {
   constructor(
     private userRepository: IUserRepository,
     private roleService: IRoleService,
@@ -115,3 +115,5 @@ export class UserService implements IUserService {
     }
   };
 }
+
+export default UserService;
