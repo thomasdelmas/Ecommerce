@@ -32,7 +32,7 @@ class UserController implements IUserController {
       }
 
       res.status(201).json({
-        user: createdUser.toJSON(),
+        user: createdUser,
         message: 'Created user ' + username,
       });
     } catch (e) {

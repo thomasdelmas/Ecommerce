@@ -82,7 +82,7 @@ class UserService implements IUserService {
       }
 
       const profile = {
-        id: user._id.toString(),
+        id: id,
         username: user.username,
         role: user.role,
         permissions: permissions,

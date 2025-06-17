@@ -10,23 +10,18 @@ export type IUser = {
 };
 
 export type IUserRepository = {
-  createUsers: (user: IUser[]) => Promise<HydratedDocument<IUser>[]>;
+  createUsers: (user: IUser[]) => Promise<IUser[]>;
   getUserByUsername: (
     username: IUser['username'],
   ) => Promise<HydratedDocument<IUser> | null>;
-  getUserById: (id: string) => Promise<HydratedDocument<IUser> | null>;
+  getUserById: (id: string) => Promise<IUser | null>;
   deleteUsers: (ids: string[]) => Promise<DeleteResult>;
 };
 
 export type IUserService = {
-  register: (
-    username: string,
-    password: string,
-  ) => Promise<HydratedDocument<IUser> | null>;
+  register: (username: string, password: string) => Promise<IUser | null>;
   login: (username: string, password: string) => Promise<string | null>;
-  findUserByUsername: (
-    username: string,
-  ) => Promise<HydratedDocument<IUser> | null>;
+  findUserByUsername: (username: string) => Promise<IUser | null>;
   getProfile: (id: string) => Promise<IProfile | null>;
   deleteUsers: (userIds: string[]) => Promise<number | null>;
 };

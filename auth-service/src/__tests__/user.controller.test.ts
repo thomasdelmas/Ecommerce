@@ -51,11 +51,9 @@ describe('UserController - register', () => {
 
     it('should create user successfully', async () => {
       const mockUser = {
-        toJSON: (): { id: string; username: string; role: string } => ({
-          id: 'someid',
-          username: 'testuser',
-          role: 'user',
-        }),
+        id: 'someid',
+        username: 'testuser',
+        role: 'user',
       };
       userServiceMock.findUserByUsername.mockResolvedValue(null);
       userServiceMock.register.mockResolvedValue(mockUser as any);

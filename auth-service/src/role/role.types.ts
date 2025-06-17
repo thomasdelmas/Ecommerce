@@ -1,5 +1,3 @@
-import { HydratedDocument } from 'mongoose';
-
 export type IRole = {
   role: string;
   permissions: string[];
@@ -10,5 +8,5 @@ export type IRoleService = {
 };
 
 export type IRoleRepository = {
-  getRole: (role: string) => Promise<HydratedDocument<IRole> | null>;
+  getRole: (role: string) => Promise<IRole | null>;
 };
