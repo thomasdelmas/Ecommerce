@@ -1,15 +1,6 @@
-import { DeleteResult, HydratedDocument, Types } from 'mongoose';
-import { IUser } from '../types/user.js';
-import { IUserModel } from '../types/db.js';
-
-export type IUserRepository = {
-  createUsers: (user: IUser[]) => Promise<HydratedDocument<IUser>[]>;
-  getUserByUsername: (
-    username: IUser['username'],
-  ) => Promise<HydratedDocument<IUser> | null>;
-  getUserById: (id: string) => Promise<HydratedDocument<IUser> | null>;
-  deleteUsers: (ids: string[]) => Promise<DeleteResult>;
-};
+import { Types } from 'mongoose';
+import type { IUserModel } from '../types/db.types.js';
+import type { IUser, IUserRepository } from './user.types.js';
 
 export class UserRepository implements IUserRepository {
   constructor(private db: IUserModel) {}

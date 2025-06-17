@@ -7,10 +7,10 @@ import {
   afterAll,
   beforeAll,
 } from '@jest/globals';
-import { UserRepository } from '../repositories/userRepository';
-import { IUserModel } from '../types/db';
-import { IUser } from '../types/user';
+import { UserRepository } from '../user/user.repository';
 import { DeleteResult, HydratedDocument, Types } from 'mongoose';
+import { IUserModel } from '../types/db.types';
+import { IUser } from '../user/user.types';
 
 describe('UserRepository', () => {
   let repository: UserRepository;

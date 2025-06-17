@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { IConfig } from '../types/config.js';
+import { IConfig } from '../types/config.types.js';
 
 const env = process.env.NODE_ENV || 'development';
 

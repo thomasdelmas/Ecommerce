@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import { IRoleModel, IUserModel } from '../types/db.js';
+import type { IRoleModel, IUserModel } from '../types/db.types.js';
 import UserSchema from './schemas/userSchema.js';
-import { IUser } from '../types/user.js';
+import type { IUser } from '../user/user.types.js';
 import { RoleSchema } from './schemas/roleSchema.js';
-import { IRole } from '../types/role.js';
+import type { IRole } from '../role/role.types.js';
 
 export const models = {
   user: mongoose.model<IUser, IUserModel>('Users', UserSchema),

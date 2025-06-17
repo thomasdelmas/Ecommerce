@@ -1,57 +1,19 @@
 import express from 'express';
-import { IUserService } from '../services/userService.js';
-import { JwtPayload } from 'jsonwebtoken';
-
-export type GetProfileRequest = {
-  payload: JwtPayload;
-};
-
-export type IDeleteUserReqBody = {
-  payload: JwtPayload;
-};
-
-export type IDeleteUserParams = {
-  id: string;
-};
-
-export type IDeleteUsersReqBody = {
-  userIds: string[];
-};
-
-export type RegisterRequest = {
-  username: string;
-  password: string;
-};
-
-export type LoginRequest = {
-  username: string;
-  password: string;
-};
-
-export type IUserController = {
-  register: (
-    req: express.Request<RegisterRequest>,
-    res: express.Response,
-  ) => Promise<any>;
-  login: (
-    req: express.Request<RegisterRequest>,
-    res: express.Response,
-  ) => Promise<any>;
-  deleteUsers: (
-    req: express.Request<{}, {}, IDeleteUsersReqBody>,
-    res: express.Response,
-  ) => Promise<any>;
-  deleteUser: (
-    req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
-    res: express.Response,
-  ) => Promise<any>;
-};
+import type {
+  GetProfileRequest,
+  IDeleteUserParams,
+  IDeleteUserReqBody,
+  IDeleteUsersReqBody,
+  IRegisterRequest,
+  IUserController,
+  IUserService,
+} from './user.types.js';
 
 export class UserController implements IUserController {
   constructor(private userService: IUserService) {}
 
   register = async (
-    req: express.Request<{}, {}, RegisterRequest>,
+    req: express.Request<{}, {}, IRegisterRequest>,
     res: express.Response,
   ): Promise<any> => {
     try {
@@ -81,7 +43,7 @@ export class UserController implements IUserController {
   };
 
   login = async (
-    req: express.Request<{}, {}, RegisterRequest>,
+    req: express.Request<{}, {}, IRegisterRequest>,
     res: express.Response,
   ): Promise<any> => {
     try {

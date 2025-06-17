@@ -10,7 +10,7 @@ import request from 'supertest';
 import mongoose from 'mongoose';
 
 //  Mock first
-jest.mock('../controllers/userController', () => {
+jest.mock('../user/user.controller', () => {
   return {
     UserController: jest.fn().mockImplementation(() => ({
       register: jest.fn((req: any, res: any) =>

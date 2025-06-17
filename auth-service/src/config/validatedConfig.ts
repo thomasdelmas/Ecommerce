@@ -1,5 +1,5 @@
 import rawConfig from './rawConfig.js';
-import { IConfig } from '../types/config.js';
+import { IConfig } from '../types/config.types.js';
 
 function assertConfig(c: IConfig): asserts c is Required<IConfig> {
   if (!c.mongoURI) throw new Error('mongoURI is undefined');

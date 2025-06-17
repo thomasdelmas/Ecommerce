@@ -1,24 +1,9 @@
 import jwt from 'jsonwebtoken';
-import { HydratedDocument } from 'mongoose';
-import { IUser } from '../types/user.js';
 import bcrypt from 'bcryptjs';
-import { IUserRepository } from '../repositories/userRepository.js';
 import config from '../config/validatedConfig.js';
-import { IProfile } from '../types/profile.js';
-import { IRoleService } from './roleService.js';
-
-export type IUserService = {
-  register: (
-    username: string,
-    password: string,
-  ) => Promise<HydratedDocument<IUser> | null>;
-  login: (username: string, password: string) => Promise<string | null>;
-  findUserByUsername: (
-    username: string,
-  ) => Promise<HydratedDocument<IUser> | null>;
-  getProfile: (id: string) => Promise<IProfile | null>;
-  deleteUsers: (userIds: string[]) => Promise<number | null>;
-};
+import type { IProfile } from '../types/profile.types.js';
+import type { IRoleService } from '../role/role.types.js';
+import type { IUserRepository, IUserService } from './user.types.js';
 
 export class UserService implements IUserService {
   constructor(

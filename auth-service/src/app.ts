@@ -4,17 +4,14 @@ import http from 'http';
 import config from './config/validatedConfig.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { UserRepository } from './repositories/userRepository.js';
-import { UserService } from './services/userService.js';
-import {
+import type {
   GetProfileRequest,
   IDeleteUserParams,
   IDeleteUserReqBody,
   IDeleteUsersReqBody,
-  LoginRequest,
-  RegisterRequest,
-  UserController,
-} from './controllers/userController.js';
+  ILoginRequest,
+  IRegisterRequest,
+} from './user/user.types.js';
 import { models } from './models/init.js';
 import { validateRequest } from './middlewares/validateRequest.js';
 import {
@@ -24,13 +21,15 @@ import {
 } from './validators/userValidator.js';
 import { verifyToken } from './middlewares/verifyToken.js';
 import { authorize } from './middlewares/authorize.js';
-import { RoleRepository } from './repositories/roleRepository.js';
-import { RoleService } from './services/roleService.js';
+import { UserController } from './user/user.controller.js';
+import { UserRepository } from './user/user.repository.js';
+import { RoleService } from './role/role.service.js';
+import { UserService } from './user/user.service.js';
+import { RoleRepository } from './role/role.repository.js';
 
 export class App {
   app: express.Application;
   userController: UserController;
-  // roleController: RoleController;
   server: http.Server | null = null;
 
   constructor(userController?: UserController) {
@@ -41,9 +40,6 @@ export class App {
     const roleService = new RoleService(roleRepository);
     const userService = new UserService(userRepository, roleService);
     this.userController = userController ?? new UserController(userService);
-    // this.roleController =
-    // 	roleController ??
-    // 	new UserController();
     this.configureRoutes();
   }
 
@@ -60,14 +56,14 @@ export class App {
       '/register',
       registerValidation,
       validateRequest,
-      (req: express.Request<RegisterRequest>, res: express.Response) =>
+      (req: express.Request<IRegisterRequest>, res: express.Response) =>
         this.userController.register(req, res),
     );
     this.app.post(
       '/login',
       loginValidation,
       validateRequest,
-      (req: express.Request<LoginRequest>, res: express.Response) =>
+      (req: express.Request<ILoginRequest>, res: express.Response) =>
         this.userController.login(req, res),
     );
     this.app.get(

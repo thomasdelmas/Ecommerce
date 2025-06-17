@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { IRole } from '../../types/role';
+import type { IRole } from '../../role/role.types.js';
 
 export const RoleSchema = new Schema<IRole>({
   role: {

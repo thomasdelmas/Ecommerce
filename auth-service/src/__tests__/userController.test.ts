@@ -6,17 +6,17 @@ import {
   beforeAll,
   it,
 } from '@jest/globals';
-import {
+import { UserController } from '../user/user.controller';
+import { Request, Response } from 'express';
+import { HydratedDocument } from 'mongoose';
+import type {
   IDeleteUserParams,
   IDeleteUserReqBody,
   IDeleteUsersReqBody,
-  UserController,
-} from '../controllers/userController';
-import { IUserService } from '../services/userService';
-import { Request, Response } from 'express';
-import { HydratedDocument } from 'mongoose';
-import { IUser } from '../types/user';
-import { IProfile } from '../types/profile';
+  IUser,
+  IUserService,
+} from '../user/user.types';
+import type { IProfile } from '../types/profile.types';
 
 describe('UserController - register', () => {
   let userServiceMock: jest.Mocked<IUserService>;

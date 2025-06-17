@@ -1,8 +1,4 @@
-import { IRoleRepository } from '../repositories/roleRepository';
-
-export type IRoleService = {
-  getPermissionsForRole: (name: string) => Promise<string[] | null>;
-};
+import type { IRoleRepository, IRoleService } from './role.types';
 
 export class RoleService implements IRoleService {
   constructor(private roleRepository: IRoleRepository) {}

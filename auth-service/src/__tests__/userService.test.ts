@@ -1,11 +1,10 @@
 import { jest, describe, expect, beforeEach, it } from '@jest/globals';
-import { IUserRepository } from '../repositories/userRepository';
-import { UserService } from '../services/userService';
-import { IUser } from '../types/user';
+import { UserService } from '../user/user.service';
 import { HydratedDocument, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { IRoleService } from '../services/roleService';
+import { IRoleService } from '../role/role.types';
+import { IUser, IUserRepository } from '../user/user.types';
 
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
