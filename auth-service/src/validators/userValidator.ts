@@ -9,6 +9,7 @@ export const registerValidation: ValidationChain[] = [
     .withMessage('Username must be at least 2 characters long'),
 
   body('password')
+    .trim()
     .notEmpty()
     .withMessage('Password is required')
     .isLength({ min: 6 })
@@ -21,6 +22,7 @@ export const registerValidation: ValidationChain[] = [
     .withMessage('Password must contain at least one uppercase letter'),
 
   body('confirmPassword')
+    .trim()
     .notEmpty()
     .withMessage('Confirm password is required')
     .custom((value, { req }) => value === req.body.password)
@@ -36,10 +38,25 @@ export const loginValidation: ValidationChain[] = [
     .withMessage('Username invalid'),
 
   body('password')
+    .trim()
     .notEmpty()
     .withMessage('Password is required')
     .isLength({ min: 6 })
     .withMessage('Password invalid')
     .isLength({ max: 30 })
     .withMessage('Password invalid'),
+];
+
+export const deleteAdminValidation: ValidationChain[] = [
+  body('userIds')
+    .isArray({ min: 1 })
+    .withMessage('userIds must be a non-empty array'),
+
+  body('userIds.*')
+    .isString()
+    .withMessage('Each userId must be a string')
+    .isLength({ min: 24, max: 24 })
+    .withMessage('Each userId must be 24 characters long')
+    .matches(/^[a-fA-F0-9]{24}$/)
+    .withMessage('Each userId must be a valid 24-char hex string'),
 ];

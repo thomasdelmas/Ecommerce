@@ -9,12 +9,13 @@ export const validateRequest = (
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return res.status(400).json({
+    res.status(400).json({
       message: 'Validation failed',
       errors: errors.array().map((err) => ({
         message: err.msg,
       })),
     });
+		return;
   }
   next();
 };

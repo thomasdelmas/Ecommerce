@@ -1,4 +1,4 @@
-import express, { RequestHandler } from 'express';
+import express from 'express';
 import mongoose from 'mongoose';
 import http from 'http';
 import config from './config/validatedConfig.js';
@@ -18,6 +18,7 @@ import {
 import { models } from './models/init.js';
 import { validateRequest } from './middlewares/validateRequest.js';
 import {
+  deleteAdminValidation,
   loginValidation,
   registerValidation,
 } from './validators/userValidator.js';
@@ -57,31 +58,38 @@ export class App {
   configureRoutes = () => {
     this.app.post(
       '/register',
-      [registerValidation, validateRequest] as RequestHandler[],
+      registerValidation,
+      validateRequest,
       (req: express.Request<RegisterRequest>, res: express.Response) =>
         this.userController.register(req, res),
     );
     this.app.post(
       '/login',
-      [loginValidation, validateRequest] as RequestHandler[],
+      loginValidation,
+      validateRequest,
       (req: express.Request<LoginRequest>, res: express.Response) =>
         this.userController.login(req, res),
     );
     this.app.get(
       '/profile',
-      [verifyToken, authorize(['read:user'])],
+      verifyToken,
       (req: express.Request<GetProfileRequest>, res: express.Response) =>
         this.userController.getProfile(req, res),
     );
     this.app.delete(
       '/user',
-      [verifyToken, authorize(['write:admin'])],
-      (req: express.Request<IDeleteUsersReqBody>, res: express.Response) =>
-        this.userController.deleteUsers(req, res),
+      deleteAdminValidation,
+      validateRequest,
+      verifyToken,
+      authorize(['delete:user']),
+      (
+        req: express.Request<{}, {}, IDeleteUsersReqBody>,
+        res: express.Response,
+      ) => this.userController.deleteUsers(req, res),
     );
     this.app.delete(
       '/user/:id',
-      [verifyToken, authorize(['write:user'])],
+      verifyToken,
       (
         req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
         res: express.Response,
