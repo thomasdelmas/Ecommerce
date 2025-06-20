@@ -15,7 +15,16 @@ class ProductService implements IProductService {
 
     const searchResults: PromiseSettledResult<IProduct>[] =
       await Promise.allSettled(
-        inputs.map(async (input) => {
+        inputs.map(async (input, i) => {
+          const duplicateName =
+            inputs.findIndex((inp) => input.name === inp.name) < i
+              ? true
+              : false;
+
+          if (duplicateName) {
+            throw new Error('Duplicate provided product names');
+          }
+
           const nameExist = await this.productRepository.getProductByName(
             input.name,
           );
