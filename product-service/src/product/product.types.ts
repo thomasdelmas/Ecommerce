@@ -22,9 +22,7 @@ export interface CreateProductsPayload
   extends Omit<IProduct, CreateProductsPayloadOmit> {}
 
 export type IProductService = {
-  createProducts: (
-    inputs: CreateProductsPayload[],
-  ) => Promise<{
+  createProducts: (inputs: CreateProductsPayload[]) => Promise<{
     createdProducts: IProduct[] | null;
     failed: { input: CreateProductsPayload; reason: string }[];
   }>;
