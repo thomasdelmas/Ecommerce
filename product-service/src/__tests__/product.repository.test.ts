@@ -11,7 +11,7 @@ import ProductRepository from '../product/product.repository';
 import type { IProduct, IProductModel } from '../product/product.types';
 import mongoose, { HydratedDocument } from 'mongoose';
 import ProductSchema from '../product/product.schema';
-const mockingoose = require('mockingoose');
+const mockingoose = (await import('mockingoose')).default;
 
 describe('ProductRepository', () => {
   let repository: ProductRepository;
