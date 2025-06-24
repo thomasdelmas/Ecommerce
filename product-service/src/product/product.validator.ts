@@ -23,12 +23,6 @@ export const createProductsValidation: ValidationChain[] = [
     )
     .isLength({ max: 9 })
     .withMessage('Product price must be maximun 9 characters long'),
-  body('products.*.currency')
-    .trim()
-    .notEmpty()
-    .withMessage('Product currency is required')
-    .isLength({ max: 30 })
-    .withMessage('Product name must be maximun 30 characters long'),
   body('products.*.stock')
     .trim()
     .notEmpty()
