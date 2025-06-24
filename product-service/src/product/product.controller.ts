@@ -12,23 +12,35 @@ class ProductController implements IProductController {
     req: Request<{}, {}, ICreateProductsReqBody>,
     res: Response,
   ): Promise<any> => {
+    let returnStatus;
+    let returnMessage;
     try {
       const { products } = req.body;
 
       const creationResults =
         await this.productService.createProducts(products);
 
-      const isCreationSuccess = !creationResults.createdProducts ? false : true;
+      const successCount = creationResults.createdProducts
+        ? creationResults.createdProducts.length
+        : 0;
+      const failCount = creationResults.failed.length;
 
-      res.status(200).json({
+      if (successCount && failCount) {
+        returnStatus = 207;
+        returnMessage = 'Succesfuly created some products';
+      } else if (!failCount) {
+        returnStatus = 201;
+        returnMessage = 'Successfuly created products';
+      } else {
+        returnStatus = 400;
+        returnMessage = 'Failed to create products';
+      }
+
+      res.status(returnStatus).json({
         creationResults,
-        creationCount: isCreationSuccess
-          ? creationResults.createdProducts!.length
-          : 0,
-        rejectionCount: creationResults.failed.length,
-        message: isCreationSuccess
-          ? 'Successfuly created products'
-          : 'Failed to create products',
+        creationCount: successCount,
+        rejectionCount: failCount,
+        message: returnMessage,
       });
     } catch (e) {
       if (e instanceof Error) {
