@@ -1,0 +1,22 @@
+services:
+  product:
+    build:
+      context: .
+    env_file:
+      - .env.test
+    environment:
+      NODE_ENV: test
+      MONGO_URI: mongodb://product-mongodb:27017/
+    command: npm test
+    depends_on:
+      - product-mongodb
+
+  product-mongodb:
+    image: mongodb/mongodb-community-server:latest
+    environment:
+      MONGO_INITDB_DATABASE: test_db
+    volumes:
+      - productTestDB:/data/db
+
+volumes:
+  productTestDB:
