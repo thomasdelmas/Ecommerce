@@ -3,6 +3,7 @@ import request from 'supertest';
 import App from '../app';
 import config from '../config/validatedConfig';
 import jwt from 'jsonwebtoken';
+import { models } from '../models/init';
 const { sign } = jwt;
 
 describe('AuthService - Integration tests', () => {
@@ -47,6 +48,7 @@ describe('AuthService - Integration tests', () => {
   });
 
   afterAll(async () => {
+    await models.product.deleteMany({ category: 'T-shirt' });
     await appInstance.stop();
   });
 
