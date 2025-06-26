@@ -4,6 +4,9 @@ FROM node:20-alpine
 # 2. Set working directory
 WORKDIR /app
 
+RUN --mount=type=secret,id=npmrc \
+cp /run/secrets/npmrc /root/.npmrc
+
 # 3. Copy package.json and install deps
 COPY package*.json ./
 RUN npm install
