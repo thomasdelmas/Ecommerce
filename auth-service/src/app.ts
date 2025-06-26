@@ -137,7 +137,7 @@ export class App {
       if (e instanceof Error) {
         console.log(e.message);
       }
-      this.stop();
+      await this.stop();
     }
   };
 
