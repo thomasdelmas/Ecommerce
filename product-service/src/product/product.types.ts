@@ -17,6 +17,11 @@ export type IProductRepository = {
   getProductByName: (name: IProduct['name']) => Promise<IProduct | null>;
 };
 
+export type IProductCacheRepository = {
+  getEntry: (key: string) => Promise<IProduct[] | null>;
+  createEntry: (products: IProduct[], key: string) => Promise<string | null>;
+};
+
 type CreateProductsPayloadOmit = 'createdAt' | 'currency';
 export interface CreateProductsPayload
   extends Omit<IProduct, CreateProductsPayloadOmit> {}
