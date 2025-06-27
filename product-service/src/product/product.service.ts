@@ -1,12 +1,18 @@
 import type {
   CreateProductsPayload,
   IProduct,
-  IProductRepository,
+  IProductCacheRepository,
+  IProductDBRepository,
+  IProductFilter,
   IProductService,
 } from './product.types';
+import sha1 from 'sha1';
 
 class ProductService implements IProductService {
-  constructor(private productRepository: IProductRepository) {}
+  constructor(
+    private productDBRepository: IProductDBRepository,
+    private productCacheRepository: IProductCacheRepository,
+  ) {}
 
   createProducts = async (inputs: CreateProductsPayload[]) => {
     const successful: IProduct[] = [];
@@ -25,7 +31,7 @@ class ProductService implements IProductService {
             throw new Error('Duplicate provided product names');
           }
 
-          const nameExist = await this.productRepository.getProductByName(
+          const nameExist = await this.productDBRepository.getProductByName(
             input.name,
           );
 
@@ -53,10 +59,58 @@ class ProductService implements IProductService {
     });
 
     if (successful.length > 0) {
-      createdProducts = await this.productRepository.createProducts(successful);
+      createdProducts =
+        await this.productDBRepository.createProducts(successful);
     }
 
     return { createdProducts, failed };
+  };
+
+  getProductWithId = async (id: string) => {
+    try {
+      return await this.productDBRepository.getProductById(id);
+    } catch (err) {
+      console.log('Error in getProductWithId:', err);
+      return null;
+    }
+  };
+
+  getProductsWithFilter = async (
+    filter: IProductFilter,
+    page: number,
+    productPerPage: number,
+  ) => {
+    try {
+      const filterKey = sha1(JSON.stringify(filter));
+      const cacheKey = `filterKey:${filterKey}:page:${page}:productPerPage:${productPerPage}`;
+
+      const cachedProducts =
+        await this.productCacheRepository.getEntry(cacheKey);
+      if (cachedProducts) {
+        console.log('Cache hit');
+        return cachedProducts;
+      }
+
+      const filteredProducts =
+        await this.productDBRepository.getProductsWithFilter(
+          filter,
+          page,
+          productPerPage,
+        );
+
+      const cacheResult = await this.productCacheRepository.createEntry(
+        filteredProducts,
+        cacheKey,
+      );
+      if (!cacheResult) {
+        console.warn('Failed to cache entry: ' + cacheKey);
+      }
+
+      return filteredProducts;
+    } catch (err) {
+      console.log('Error in getProductsWithFilter:', err);
+      return null;
+    }
   };
 }
 

@@ -60,6 +60,12 @@ export type IProductService = {
     createdProducts: IProduct[] | null;
     failed: { input: CreateProductsPayload; reason: string }[];
   }>;
+  getProductWithId: (id: string) => Promise<IProduct | null>;
+  getProductsWithFilter: (
+    filter: IProductFilter,
+    page: number,
+    productPerPage: number,
+  ) => Promise<IProduct[] | null>;
 };
 
 export type ICreateProductsReqBody = {
