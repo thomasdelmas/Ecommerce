@@ -10,12 +10,14 @@ import {
 import ProductService from '../product/product.service';
 import type {
   CreateProductsPayload,
-  IProductRepository,
+  IProductDBRepository,
   IProduct,
+  IProductCacheRepository,
 } from '../product/product.types';
 
 describe('ProductService', () => {
-  let productRepository: jest.Mocked<IProductRepository>;
+  let productDBRepository: jest.Mocked<IProductDBRepository>;
+  let productCacheRepository: jest.Mocked<IProductCacheRepository>;
   let productService: ProductService;
 
   beforeAll(() => {
@@ -27,11 +29,20 @@ describe('ProductService', () => {
   });
 
   beforeEach(() => {
-    productRepository = {
+    productDBRepository = {
       getProductByName: jest.fn(),
       createProducts: jest.fn(),
+      getProductById: jest.fn(),
+      getProductsWithFilter: jest.fn(),
     };
-    productService = new ProductService(productRepository);
+    productCacheRepository = {
+      getEntry: jest.fn(),
+      createEntry: jest.fn(),
+    };
+    productService = new ProductService(
+      productDBRepository,
+      productCacheRepository,
+    );
   });
 
   it('should create all products when names are unique', async () => {
@@ -50,15 +61,15 @@ describe('ProductService', () => {
       },
     ];
 
-    productRepository.getProductByName.mockResolvedValue(null);
-    productRepository.createProducts.mockImplementation(
+    productDBRepository.getProductByName.mockResolvedValue(null);
+    productDBRepository.createProducts.mockImplementation(
       async (products) => products,
     );
 
     const result = await productService.createProducts(inputs);
 
-    expect(productRepository.getProductByName).toHaveBeenCalledTimes(2);
-    expect(productRepository.createProducts).toHaveBeenCalledTimes(1);
+    expect(productDBRepository.getProductByName).toHaveBeenCalledTimes(2);
+    expect(productDBRepository.createProducts).toHaveBeenCalledTimes(1);
     expect(result.failed).toHaveLength(0);
     expect(result.createdProducts).toHaveLength(2);
   });
@@ -79,11 +90,11 @@ describe('ProductService', () => {
       },
     ];
 
-    productRepository.getProductByName
+    productDBRepository.getProductByName
       .mockResolvedValueOnce({} as IProduct)
       .mockResolvedValueOnce(null);
 
-    productRepository.createProducts.mockResolvedValue([
+    productDBRepository.createProducts.mockResolvedValue([
       {
         createdAt: Date.now(),
         name: 'T-shirt green',
@@ -118,11 +129,11 @@ describe('ProductService', () => {
       },
     ];
 
-    productRepository.getProductByName.mockResolvedValue({} as IProduct);
+    productDBRepository.getProductByName.mockResolvedValue({} as IProduct);
 
     const result = await productService.createProducts(inputs);
 
-    expect(productRepository.createProducts).not.toHaveBeenCalled();
+    expect(productDBRepository.createProducts).not.toHaveBeenCalled();
     expect(result.createdProducts).toBeNull();
     expect(result.failed).toHaveLength(2);
     expect(result.failed[0].reason).toBe('Product name already exist');
@@ -144,8 +155,8 @@ describe('ProductService', () => {
       },
     ];
 
-    productRepository.getProductByName.mockResolvedValue(null);
-    productRepository.createProducts.mockResolvedValue([
+    productDBRepository.getProductByName.mockResolvedValue(null);
+    productDBRepository.createProducts.mockResolvedValue([
       {
         createdAt: Date.now(),
         name: 'T-shirt blue',
@@ -158,7 +169,7 @@ describe('ProductService', () => {
 
     const result = await productService.createProducts(inputs);
 
-    expect(productRepository.getProductByName).toHaveBeenCalledTimes(1);
+    expect(productDBRepository.getProductByName).toHaveBeenCalledTimes(1);
 
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0].reason).toBe('Duplicate provided product names');

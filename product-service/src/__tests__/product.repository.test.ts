@@ -7,7 +7,7 @@ import {
   afterAll,
   beforeAll,
 } from '@jest/globals';
-import ProductRepository from '../product/product.repository';
+import ProductRepository from '../product/product.db.repository';
 import type { IProduct, IProductModel } from '../product/product.types';
 import mongoose, { HydratedDocument } from 'mongoose';
 import ProductSchema from '../product/product.schema';
