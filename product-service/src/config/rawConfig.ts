@@ -17,6 +17,7 @@ const config: IConfig = {
   dbName: process.env.DB_NAME,
   allowedOrigins: process.env.ALLOWED_ORIGINS,
   privateKey: process.env.PRIVATE_KEY,
+  cacheConfigFile: process.env.CACHE_CONFIG_FILE,
 };
 
 export default config;

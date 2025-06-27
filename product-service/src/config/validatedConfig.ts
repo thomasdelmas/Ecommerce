@@ -6,6 +6,7 @@ function assertConfig(c: IConfig): asserts c is Required<IConfig> {
   if (!c.port) throw new Error('port is undefined');
   if (!c.dbName) throw new Error('dbName is undefined');
   if (!c.privateKey) throw new Error('privateKey is undefined');
+  if (!c.cacheConfigFile) throw new Error('cacheConfigFile is undefined');
 }
 
 assertConfig(rawConfig);

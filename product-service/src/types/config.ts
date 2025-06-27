@@ -4,4 +4,5 @@ export type IConfig = {
   dbName?: string;
   allowedOrigins?: string;
   privateKey?: string;
+  cacheConfigFile?: string;
 };
