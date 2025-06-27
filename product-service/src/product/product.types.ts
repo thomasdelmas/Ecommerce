@@ -35,9 +35,15 @@ export interface IProductFilter {
 
 export type IProductModel = mongoose.Model<IProduct>;
 
-export type IProductRepository = {
+export type IProductDBRepository = {
   createProducts: (products: IProduct[]) => Promise<IProduct[]>;
   getProductByName: (name: IProduct['name']) => Promise<IProduct | null>;
+  getProductById: (id: string) => Promise<IProduct | null>;
+  getProductsWithFilter: (
+    filter: IProductFilter,
+    page: number,
+    productPerPage: number,
+  ) => Promise<IProduct[]>;
 };
 
 export type IProductCacheRepository = {
