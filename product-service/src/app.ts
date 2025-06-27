@@ -5,24 +5,46 @@ import config from './config/validatedConfig.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { verifyJwt, authorize } from '@thomasdelmas/jwt-middlewares';
-import type { ICreateProductsReqBody } from './product/product.types.js';
-import ProductRepository from './product/product.repository.js';
+import type {
+  ICreateProductsReqBody,
+  IGetProductsWithFilterQuery,
+  IGetProductWithIdParams,
+} from './product/product.types.js';
+import ProductDBRepository from './product/product.db.repository.js';
+import ProductCacheRepository from './product/product.cache.repository.js';
 import ProductService from './product/product.service.js';
 import ProductController from './product/product.controller.js';
 import { validateRequest } from './middlewares/validateRequest.js';
-import { createProductsValidation } from './product/product.validator.js';
+import {
+  createProductsValidation,
+  getProductsValidation,
+  getProductValidation,
+} from './product/product.validator.js';
 import { models } from './models/init.js';
+import CacheClient from './clients/cache.js';
+import type { ICacheClient } from './clients/types.js';
+import { loadCacheConfig } from './config/loadCacheConfig.js';
+import { parseProductFilters } from './middlewares/parseProductFilter.js';
 
 class App {
   app: express.Application;
   productController: ProductController;
   server: http.Server | null = null;
+  cacheClient: ICacheClient;
 
   constructor(productController?: ProductController) {
     this.app = express();
     this.configureMiddleware();
-    const productRepository = new ProductRepository(models.product);
-    const productService = new ProductService(productRepository);
+    const cacheConfig = loadCacheConfig();
+    this.cacheClient = new CacheClient(cacheConfig);
+    const productDBRepository = new ProductDBRepository(models.product);
+    const productCacheRepository = new ProductCacheRepository(
+      this.cacheClient.get(),
+    );
+    const productService = new ProductService(
+      productDBRepository,
+      productCacheRepository,
+    );
     this.productController =
       productController ?? new ProductController(productService);
     this.configureRoutes();
@@ -51,6 +73,27 @@ class App {
         req: express.Request<{}, {}, ICreateProductsReqBody>,
         res: express.Response,
       ) => this.productController.createProducts(req, res),
+    );
+
+    this.app.get(
+      '/product/:id',
+      getProductValidation,
+      validateRequest,
+      (
+        req: express.Request<IGetProductWithIdParams, {}, {}>,
+        res: express.Response,
+      ) => this.productController.getProductWithId(req, res),
+    );
+
+    this.app.get(
+      '/product',
+      parseProductFilters,
+      getProductsValidation,
+      validateRequest,
+      (
+        req: express.Request<{}, {}, {}, IGetProductsWithFilterQuery>,
+        res: express.Response,
+      ) => this.productController.getProductsWithFilter(req, res),
     );
 
     // HealthCheck endpoint
@@ -94,6 +137,7 @@ class App {
       );
 
       await this.connectDBWithRetry(config.mongoURI, config.dbName, 3);
+      await this.cacheClient.connect();
     } catch (e) {
       if (e instanceof Error) {
         console.log(e.message);
