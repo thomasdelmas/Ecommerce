@@ -10,6 +10,29 @@ export interface IProduct {
   stock: number;
 }
 
+export type RangeFilter<T = number> = {
+  min?: T;
+  max?: T;
+};
+
+export type SelectFilter<T> = {
+  in: T[];
+};
+
+export type RegexpFilter = {
+  value: string;
+  caseSensitive?: boolean;
+};
+
+export interface IProductFilter {
+  createdAt?: RangeFilter<number>;
+  searchTerm?: RegexpFilter;
+  category?: SelectFilter<string>;
+  price?: RangeFilter<number>;
+  currency?: SelectFilter<string>;
+  stock?: RangeFilter<number>;
+}
+
 export type IProductModel = mongoose.Model<IProduct>;
 
 export type IProductRepository = {
