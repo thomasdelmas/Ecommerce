@@ -72,9 +72,27 @@ export type ICreateProductsReqBody = {
   products: CreateProductsPayload[];
 };
 
+export type IGetProductWithIdParams = {
+  id: string;
+};
+
+export type IGetProductsWithFilterQuery = {
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  currency?: string;
+};
+
 export type IProductController = {
   createProducts: (
     req: Request<{}, {}, ICreateProductsReqBody>,
+    res: Response,
+  ) => Promise<any>;
+  getProductWithId: (
+    req: Request<IGetProductWithIdParams, {}, {}>,
     res: Response,
   ) => Promise<any>;
 };
