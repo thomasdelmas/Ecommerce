@@ -65,7 +65,7 @@ export type IProductService = {
     filter: IProductFilter,
     page: number,
     productPerPage: number,
-  ) => Promise<IProduct[] | null>;
+  ) => Promise<IProduct[]>;
 };
 
 export type ICreateProductsReqBody = {

@@ -80,37 +80,31 @@ class ProductService implements IProductService {
     page: number,
     productPerPage: number,
   ) => {
-    try {
-      const filterKey = sha1(JSON.stringify(filter));
-      const cacheKey = `filterKey:${filterKey}:page:${page}:productPerPage:${productPerPage}`;
+    const filterKey = sha1(JSON.stringify(filter));
+    const cacheKey = `filterKey:${filterKey}:page:${page}:productPerPage:${productPerPage}`;
 
-      const cachedProducts =
-        await this.productCacheRepository.getEntry(cacheKey);
-      if (cachedProducts) {
-        console.log('Cache hit');
-        return cachedProducts;
-      }
-
-      const filteredProducts =
-        await this.productDBRepository.getProductsWithFilter(
-          filter,
-          page,
-          productPerPage,
-        );
-
-      const cacheResult = await this.productCacheRepository.createEntry(
-        filteredProducts,
-        cacheKey,
-      );
-      if (!cacheResult) {
-        console.warn('Failed to cache entry: ' + cacheKey);
-      }
-
-      return filteredProducts;
-    } catch (err) {
-      console.log('Error in getProductsWithFilter:', err);
-      return null;
+    const cachedProducts = await this.productCacheRepository.getEntry(cacheKey);
+    if (cachedProducts) {
+      console.log('Cache hit');
+      return cachedProducts;
     }
+
+    const filteredProducts =
+      await this.productDBRepository.getProductsWithFilter(
+        filter,
+        page,
+        productPerPage,
+      );
+
+    const cacheResult = await this.productCacheRepository.createEntry(
+      filteredProducts,
+      cacheKey,
+    );
+    if (!cacheResult) {
+      console.warn('Failed to cache entry: ' + cacheKey);
+    }
+
+    return filteredProducts;
   };
 }
 
