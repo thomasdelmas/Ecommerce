@@ -76,7 +76,7 @@ export type IGetProductWithIdParams = {
   id: string;
 };
 
-export type IGetProductsWithFilterQuery = {
+export interface IGetProductsWithFilterQuery {
   category?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -84,7 +84,12 @@ export type IGetProductsWithFilterQuery = {
   limit?: number;
   searchTerm?: string;
   currency?: string;
-};
+}
+
+export interface IGetProductsWithFilteredQuery
+  extends IGetProductsWithFilterQuery {
+  filteredQuery?: IProductFilter;
+}
 
 export type IProductController = {
   createProducts: (

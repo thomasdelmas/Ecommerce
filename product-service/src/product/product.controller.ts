@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import type {
   ICreateProductsReqBody,
-  IGetProductsWithFilterQuery,
+  IGetProductsWithFilteredQuery,
   IGetProductWithIdParams,
   IProductController,
   IProductService,
@@ -67,7 +67,7 @@ class ProductController implements IProductController {
         return;
       }
 
-      res.status(404).json({
+      res.status(200).json({
         product,
         message: 'Found product id' + productId,
       });
@@ -79,7 +79,7 @@ class ProductController implements IProductController {
   };
 
   getProductsWithFilter = async (
-    req: Request<{}, {}, {}, IGetProductsWithFilterQuery>,
+    req: Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
     res: Response,
   ): Promise<any> => {
     try {
@@ -87,25 +87,12 @@ class ProductController implements IProductController {
       const limit = req.query.limit || 20;
 
       const filter = req.filteredQuery || {};
-      // const filter = {
-      // 	category: req.query.category ? { in: (req.query.category as string).split("'") } : undefined,
-      // 	price: req.query.minPrice || req.query.maxPrice ? { min: parseInt(req.query.minPrice as string) || undefined, max: parseInt(req.query.maxPrice as string) || undefined } : undefined,
-      // 	searchTerm: req.query.searchTerm ? { value: req.query.searchTerm, caseSensitive: false } as RegexpFilter : undefined,
-      // 	currency: req.query.currency ? { in: (req.query.currency as string).split("'") } : undefined,
-      // }
 
       const filteredProducts = await this.productService.getProductsWithFilter(
         filter,
         page,
         limit,
       );
-
-      if (!filteredProducts) {
-        res
-          .status(500)
-          .json({ message: 'Failed to get products. Server error.' });
-        return;
-      }
 
       const returnCount = filteredProducts.length;
       const returnStatus = returnCount > 0 ? 200 : 404;
@@ -119,7 +106,9 @@ class ProductController implements IProductController {
       });
     } catch (e) {
       if (e instanceof Error) {
-        res.status(400).json({ message: e.message });
+        res
+          .status(500)
+          .json({ message: 'Failed to get products. Server error.' });
       }
     }
   };
