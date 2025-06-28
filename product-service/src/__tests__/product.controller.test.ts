@@ -7,7 +7,12 @@ import {
   it,
 } from '@jest/globals';
 import { Request, Response } from 'express';
-import type { IProductService } from '../product/product.types';
+import type {
+  IGetProductsWithFilteredQuery,
+  IGetProductWithIdParams,
+  IProduct,
+  IProductService,
+} from '../product/product.types';
 import ProductController from '../product/product.controller';
 
 describe('ProductController - createProducts', () => {
@@ -19,6 +24,8 @@ describe('ProductController - createProducts', () => {
   beforeEach(() => {
     productServiceMock = {
       createProducts: jest.fn(),
+      getProductWithId: jest.fn(),
+      getProductsWithFilter: jest.fn(),
     } as unknown as jest.Mocked<IProductService>;
 
     controller = new ProductController(productServiceMock);
@@ -176,6 +183,180 @@ describe('ProductController - createProducts', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+    });
+  });
+
+  describe('getProductWithId', () => {
+    beforeEach(() => {
+      req = { params: { id: 'ffffffffffffffffffffffff' } };
+    });
+
+    it('should return a product successfully', async () => {
+      const mockProduct = {
+        createdAt: Date.now(),
+        name: 'T-shirt blue',
+        category: 'T-shirt',
+        price: 33.5,
+        currency: 'euro',
+        stock: 5,
+      };
+
+      productServiceMock.getProductWithId.mockResolvedValue(mockProduct);
+
+      await controller.getProductWithId(
+        req as Request<IGetProductWithIdParams, {}, {}>,
+        res as Response,
+      );
+
+      expect(productServiceMock.getProductWithId).toHaveBeenCalledWith(
+        req.params?.id as string,
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        product: mockProduct,
+        message: 'Found product id' + req.params?.id,
+      });
+    });
+
+    it('should return error with product not found', async () => {
+      productServiceMock.getProductWithId.mockResolvedValue(null);
+
+      await controller.getProductWithId(
+        req as Request<IGetProductWithIdParams, {}, {}>,
+        res as Response,
+      );
+
+      expect(productServiceMock.getProductWithId).toHaveBeenCalledWith(
+        req.params?.id as string,
+      );
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Could not find product with id: ' + req.params?.id,
+      });
+    });
+
+    it('should handle service errors gracefully', async () => {
+      productServiceMock.getProductWithId.mockRejectedValue(
+        new Error('DB error'),
+      );
+
+      await controller.getProductWithId(
+        req as Request<IGetProductWithIdParams, {}, {}>,
+        res as Response,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+    });
+  });
+
+  describe('getProductsWithFilter', () => {
+    beforeEach(() => {
+      req = {
+        query: {
+          page: 1,
+          limit: 20,
+        },
+        filteredQuery: {
+          category: { in: ['T-shirt', 'Pant'] },
+          price: { min: 20, max: 100 },
+        },
+      } as IGetProductsWithFilteredQuery;
+    });
+
+    it('should return a product successfully', async () => {
+      const mockProduct = [
+        {
+          createdAt: Date.now(),
+          name: 'T-shirt blue',
+          category: 'T-shirt',
+          price: 33.5,
+          currency: 'euro',
+          stock: 5,
+        },
+      ];
+      const filteredQuery = {
+        category: { in: ['T-shirt', 'Pant'] },
+        price: { min: 20, max: 100 },
+      };
+      const page = 1;
+      const limit = 20;
+
+      productServiceMock.getProductsWithFilter.mockResolvedValue(mockProduct);
+
+      await controller.getProductsWithFilter(
+        req as Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
+        res as Response,
+      );
+
+      expect(productServiceMock.getProductsWithFilter).toHaveBeenCalledWith(
+        filteredQuery,
+        page,
+        limit,
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        products: mockProduct,
+        count: mockProduct.length,
+        message: 'Successfuly found products',
+      });
+    });
+
+    it('should return error with product not found', async () => {
+      const mockProduct = [] as IProduct[];
+      const filteredQuery = {
+        category: { in: ['T-shirt', 'Pant'] },
+        price: { min: 20, max: 100 },
+      };
+      const page = 1;
+      const limit = 20;
+
+      productServiceMock.getProductsWithFilter.mockResolvedValue(mockProduct);
+
+      await controller.getProductsWithFilter(
+        req as Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
+        res as Response,
+      );
+
+      expect(productServiceMock.getProductsWithFilter).toHaveBeenCalledWith(
+        filteredQuery,
+        page,
+        limit,
+      );
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        products: [],
+        count: 0,
+        message: 'No product found.',
+      });
+    });
+
+    it('should handle service errors gracefully', async () => {
+      const filteredQuery = {
+        category: { in: ['T-shirt', 'Pant'] },
+        price: { min: 20, max: 100 },
+      };
+      const page = 1;
+      const limit = 20;
+
+      productServiceMock.getProductsWithFilter.mockImplementation(() => {
+        throw new Error('Cache error');
+      });
+
+      await controller.getProductsWithFilter(
+        req as Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
+        res as Response,
+      );
+
+      expect(productServiceMock.getProductsWithFilter).toHaveBeenCalledWith(
+        filteredQuery,
+        page,
+        limit,
+      );
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Failed to get products. Server error.',
+      });
     });
   });
 });
