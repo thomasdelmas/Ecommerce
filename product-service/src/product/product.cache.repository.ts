@@ -5,8 +5,9 @@ class ProductCacheRepository implements IProductCacheRepository {
   constructor(private client: RedisClientType) {}
 
   getEntry = async (key: string) => {
-    const jsonResult = await this.client.get(key);
-    return jsonResult ? JSON.parse(jsonResult) : null;
+    return await this.client
+      .get(key)
+      .then((json) => (json ? JSON.parse(json) : null));
   };
 
   createEntry = async (products: IProduct[], key: string) => {
