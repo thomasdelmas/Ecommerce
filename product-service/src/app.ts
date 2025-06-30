@@ -152,6 +152,7 @@ class App {
   };
 
   stop = async () => {
+		this.cacheClient.destroy();
     await this.disconnectDB();
     if (this.server) {
       this.server.close();

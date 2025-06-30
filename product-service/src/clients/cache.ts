@@ -50,7 +50,7 @@ class CacheClient implements ICacheClient {
   };
 
   destroy = () => {
-    if (this.client) {
+    if (this.client && this.client.isOpen) {
       this.client.destroy();
       this.client = null;
       this.isOpen = false;
