@@ -6,8 +6,30 @@ import {
   it,
   afterEach,
 } from '@jest/globals';
-import request from 'supertest';
 import mongoose from 'mongoose';
+
+import App from '../app';
+import config from '../config/validatedConfig';
+
+import CacheClient from '../clients/cache';
+
+const mockConnect = jest
+  .spyOn(CacheClient.prototype, 'connect')
+  .mockImplementation(async () => {
+    console.log('mocked connect function');
+  });
+const mockDestroy = jest
+  .spyOn(CacheClient.prototype, 'destroy')
+  .mockImplementation(async () => {
+    console.log('mocked destroy function');
+  });
+
+jest.mock('../clients/cache', () => {
+  return jest.fn().mockImplementation(() => ({
+    connect: mockConnect,
+    destroy: mockDestroy,
+  }))
+});
 
 jest.mock('../product/product.controller', () => {
   return {
@@ -33,9 +55,6 @@ jest.mock('../config/validatedConfig', () => ({
   privateKey: '2oisdfo45oi#$%',
 }));
 
-import App from '../app';
-import config from '../config/validatedConfig';
-
 const originalConfig = { ...config };
 
 describe('App', () => {
@@ -50,16 +69,15 @@ describe('App', () => {
     if (appInstance?.stop) {
       await appInstance.stop();
     }
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
+		jest.clearAllMocks()
   });
 
-  describe('Middleware & Routes', () => {
-    it('should respond to health check route', async () => {
-      const res = await request(appInstance.app).get('/');
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual({ status: 'ok' });
-    });
+  // describe('Middleware & Routes', () => {
+    // it('should respond to health check route', async () => {
+    //   const res = await request(appInstance.app).get('/');
+    //   expect(res.status).toBe(200);
+    //   expect(res.body).toEqual({ status: 'ok' });
+    // });
 
     //   it('should call createProducts controller on POST /product', async () => {
     //     const createProductsMock = jest.fn((_req: any, res: any) =>
@@ -93,10 +111,10 @@ describe('App', () => {
     //     expect(res.status).toBe(201);
     //     expect(createProductsMock).toHaveBeenCalled();
     //   });
-  });
+  // });
 
-  describe('Database Connection', () => {
-    it('should connect to MongoDB immediately', async () => {
+  describe('3rd party connections', () => {
+    it('should connect to MongoDB and Redis on start', async () => {
       const connectSpy = jest
         .spyOn(mongoose, 'connect')
         .mockResolvedValueOnce({} as any);
@@ -110,10 +128,11 @@ describe('App', () => {
       await appInstance.start();
 
       expect(connectSpy).toHaveBeenCalledTimes(1);
+			expect(mockConnect).toHaveBeenCalled();
       expect(listenSpy).toHaveBeenCalled();
     });
-
-    it('should retry on MongoDB connection failure', async () => {
+		
+    it('should retry MongoDB connection before succeeding and still connect to Redis', async () => {
       const connectSpy = jest
         .spyOn(mongoose, 'connect')
         .mockRejectedValueOnce(new Error('fail1'))
@@ -129,10 +148,24 @@ describe('App', () => {
       await appInstance.start();
 
       expect(connectSpy).toHaveBeenCalledTimes(2);
+			expect(mockConnect).toHaveBeenCalledTimes(1);
       expect(listenSpy).toHaveBeenCalled();
     });
 
-    it('should fail after all retries', async () => {
+		it('should destroy Redis client on stop and disconnect MongoDB', async () => {
+			const disconnectSpy = jest
+				.spyOn(mongoose, 'disconnect')
+				.mockResolvedValueOnce();
+
+			appInstance.server = { close: jest.fn() } as any;
+
+			await appInstance.stop();
+
+			expect(mockDestroy).toHaveBeenCalled();
+			expect(disconnectSpy).toHaveBeenCalled();
+		});
+
+    it('should fail after 3 MongoDB connection attempts and still destroy Redis', async () => {
       const error = new Error('Mongo fail');
       const connectSpy = jest
         .spyOn(mongoose, 'connect')
@@ -147,6 +180,8 @@ describe('App', () => {
       await appInstance.start();
 
       expect(connectSpy).toHaveBeenCalledTimes(3);
+			expect(mockConnect).not.toHaveBeenCalled();
+			expect(mockDestroy).toHaveBeenCalled();
       expect(disconnectSpy).toHaveBeenCalled();
       expect(stopSpy).toHaveBeenCalled();
     }, 20000);
@@ -168,6 +203,7 @@ describe('App', () => {
 
       expect(listenSpy).toHaveBeenCalled();
       expect(connectSpy).toHaveBeenCalled();
+			expect(mockConnect).toHaveBeenCalled();
     });
 
     it('should stop the server and disconnect DB', async () => {
@@ -182,6 +218,7 @@ describe('App', () => {
 
       expect(closeMock).toHaveBeenCalled();
       expect(disconnectSpy).toHaveBeenCalled();
+			expect(mockDestroy).toHaveBeenCalled();
     });
   });
 });

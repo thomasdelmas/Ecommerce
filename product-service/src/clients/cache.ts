@@ -13,7 +13,7 @@ class CacheClient implements ICacheClient {
     this.client = this.create();
   }
 
-  create = () => {
+  create() {
     return createClient({
       url: this.config.url,
     })
@@ -31,14 +31,14 @@ class CacheClient implements ICacheClient {
       );
   };
 
-  get = () => {
+  get() {
     if (!this.client) {
       throw new Error('Cache client is not initialized or has been destroyed.');
     }
     return this.client;
   };
 
-  connect = async () => {
+  async connect () {
     if (!this.client) {
       throw new Error('Cache client is undefined.');
     } else if (this.isOpen) {
@@ -49,7 +49,7 @@ class CacheClient implements ICacheClient {
     this.isOpen = true;
   };
 
-  destroy = () => {
+  async destroy () {
     if (this.client && this.client.isOpen) {
       this.client.destroy();
       this.client = null;
