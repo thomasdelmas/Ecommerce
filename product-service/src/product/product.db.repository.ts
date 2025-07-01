@@ -1,4 +1,4 @@
-import { FilterQuery, Types } from 'mongoose';
+import { FilterQuery } from 'mongoose';
 import type {
   IProduct,
   IProductFilter,
@@ -19,7 +19,7 @@ class ProductDBRepository implements IProductDBRepository {
   };
 
   getProductById = async (id: string) => {
-    return await this.db.findOne({ _id: new Types.ObjectId(id) }).exec();
+    return await this.db.findOne({ _id: id }).exec();
   };
 
   applyRangeFilter = (
