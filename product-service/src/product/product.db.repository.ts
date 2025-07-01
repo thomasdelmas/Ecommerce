@@ -33,11 +33,11 @@ class ProductDBRepository implements IProductDBRepository {
     if (filter.max !== undefined) query[field].$lte = filter.max;
   };
 
-  getProductsWithFilter = async (
+  async getProductsWithFilter(
     filter: IProductFilter,
     page: number,
     productPerPage: number,
-  ) => {
+  ) {
     const query: FilterQuery<IProduct> = {};
 
     if (filter.createdAt) {
@@ -76,7 +76,7 @@ class ProductDBRepository implements IProductDBRepository {
       .exec();
 
     return products;
-  };
+  }
 }
 
 export default ProductDBRepository;
