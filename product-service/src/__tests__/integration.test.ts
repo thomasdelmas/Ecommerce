@@ -267,7 +267,7 @@ describe('ProductService - Integration tests', () => {
 
     it('should return 400 for invalid product ID', async () => {
       const res = await request(appInstance.app).get('/product/not-an-id');
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(400);
     });
   });
 

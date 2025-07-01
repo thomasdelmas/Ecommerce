@@ -67,12 +67,7 @@ class ProductService implements IProductService {
   }
 
   async getProductWithId(id: string) {
-    try {
-      return await this.productDBRepository.getProductById(id);
-    } catch (err) {
-      console.log('Error in getProductWithId:', err);
-      return null;
-    }
+    return await this.productDBRepository.getProductById(id);
   }
 
   async getProductsWithFilter(

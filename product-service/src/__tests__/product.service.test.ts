@@ -205,10 +205,8 @@ describe('ProductService', () => {
       expect(result).toBe(product);
     });
 
-    it('should handle rejection gracefuly', async () => {
-      productDBRepository.getProductById.mockRejectedValue(
-        new Error('Cache error'),
-      );
+    it('should return null on null', async () => {
+      productDBRepository.getProductById.mockResolvedValue(null);
 
       const res = await productService.getProductWithId(
         'ffffffffffffffffffffffff',
