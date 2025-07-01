@@ -69,7 +69,7 @@ class ProductController implements IProductController {
 
       res.status(200).json({
         product,
-        message: 'Found product id' + productId,
+        message: 'Found product id ' + productId,
       });
     } catch (e) {
       if (e instanceof Error) {
