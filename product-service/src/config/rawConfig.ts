@@ -18,6 +18,7 @@ const config: IConfig = {
   allowedOrigins: process.env.ALLOWED_ORIGINS,
   privateKey: process.env.PRIVATE_KEY,
   cacheConfigFile: process.env.CACHE_CONFIG_FILE,
+  redisURL: process.env.REDIS_URL || '',
 };
 
 export default config;

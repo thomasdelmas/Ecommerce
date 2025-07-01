@@ -5,4 +5,5 @@ export type IConfig = {
   allowedOrigins?: string;
   privateKey?: string;
   cacheConfigFile?: string;
+  redisURL?: string;
 };
