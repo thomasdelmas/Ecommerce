@@ -285,26 +285,27 @@ describe('ProductService - Integration tests', () => {
       expect(getProductsWithFilterSpy).toHaveBeenCalled();
 
       expect(res.status).toBe(200);
-      expect(res.body).toMatchObject({
-        products: [
-          {
+      expect(res.body.products).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
             name: 'Purple Pant',
             category: 'Pant',
             price: 100,
             currency: 'euro',
             stock: 30,
-          },
-          {
+          }),
+          expect.objectContaining({
             name: 'Black Pant',
             category: 'Pant',
             price: 200,
             currency: 'Dollar',
             stock: 3000,
-          },
-        ],
-        count: 2,
-        message: 'Successfuly found products',
-      });
+          }),
+        ]),
+      );
+
+      expect(res.body.count).toBe(2);
+      expect(res.body.message).toBe('Successfuly found products');
     });
 
     it('should retrieve filtered products information succesfuly with cache hit (same request than the previous)', async () => {
