@@ -214,7 +214,7 @@ describe('ProductController - createProducts', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         product: mockProduct,
-        message: 'Found product id' + req.params?.id,
+        message: 'Found product id ' + req.params?.id,
       });
     });
 
