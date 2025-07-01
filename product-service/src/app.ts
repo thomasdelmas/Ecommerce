@@ -28,29 +28,13 @@ import { parseProductFilters } from './middlewares/parseProductFilter.js';
 
 class App {
   app: express.Application;
-  productController: ProductController;
+  private _productController: ProductController | null = null;
   server: http.Server | null = null;
-  cacheClient: ICacheClient;
+  private _cacheClient: ICacheClient | null = null;
 
-  constructor(productController?: ProductController) {
+  constructor() {
     this.app = express();
     this.configureMiddleware();
-    const cacheConfig = loadCacheConfig();
-    this.cacheClient = new CacheClient(cacheConfig);
-    const cacheConnection = this.cacheClient.get();
-    cacheConnection.on('error', async (err) => {
-      console.error('Critical cache error:', err);
-      await this.stop();
-    });
-    const productDBRepository = new ProductDBRepository(models.product);
-    const productCacheRepository = new ProductCacheRepository(cacheConnection);
-    const productService = new ProductService(
-      productDBRepository,
-      productCacheRepository,
-    );
-    this.productController =
-      productController ?? new ProductController(productService);
-    this.configureRoutes();
   }
 
   configureMiddleware = () => {
@@ -105,6 +89,16 @@ class App {
     });
   };
 
+  get productController() {
+    if (!this._productController) throw new Error('Controller not initialized');
+    return this._productController;
+  }
+
+  get cacheClient() {
+    if (!this._cacheClient) throw new Error('Cache client not initialized');
+    return this._cacheClient;
+  }
+
   connectDBWithRetry = async (
     uri: string,
     dbName: string,
@@ -135,6 +129,24 @@ class App {
 
   start = async () => {
     try {
+      const cacheConfig = loadCacheConfig();
+      this._cacheClient = new CacheClient(cacheConfig);
+      const cacheConnection = this.cacheClient.get();
+      cacheConnection.on('error', async (err) => {
+        console.error('Critical cache error:', err);
+        await this.stop();
+      });
+      const productDBRepository = new ProductDBRepository(models.product);
+      const productCacheRepository = new ProductCacheRepository(
+        cacheConnection,
+      );
+      const productService = new ProductService(
+        productDBRepository,
+        productCacheRepository,
+      );
+      this._productController = new ProductController(productService);
+      this.configureRoutes();
+
       this.server = this.app.listen(config.port, () =>
         console.log(`Server started on port ${config.port}`),
       );
@@ -155,7 +167,9 @@ class App {
   };
 
   stop = async () => {
-    this.cacheClient.destroy();
+    if (this._cacheClient) {
+      this._cacheClient.destroy();
+    }
     await this.disconnectDB();
     if (this.server) {
       this.server.close();

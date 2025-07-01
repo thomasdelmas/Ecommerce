@@ -101,6 +101,7 @@ describe('App', () => {
 
       appInstance.server = { close: jest.fn() } as any;
 
+      await appInstance.start();
       await appInstance.stop();
 
       expect(mockDestroy).toHaveBeenCalled();
@@ -146,21 +147,6 @@ describe('App', () => {
       expect(listenSpy).toHaveBeenCalled();
       expect(connectSpy).toHaveBeenCalled();
       expect(mockConnect).toHaveBeenCalled();
-    });
-
-    it('should stop the server and disconnect DB', async () => {
-      const closeMock = jest.fn();
-      const disconnectSpy = jest
-        .spyOn(mongoose, 'disconnect')
-        .mockResolvedValueOnce();
-
-      appInstance.server = { close: closeMock } as any;
-
-      await appInstance.stop();
-
-      expect(closeMock).toHaveBeenCalled();
-      expect(disconnectSpy).toHaveBeenCalled();
-      expect(mockDestroy).toHaveBeenCalled();
     });
   });
 });
