@@ -15,11 +15,11 @@ class ProductDBRepository implements IProductDBRepository {
   };
 
   getProductByName = async (name: IProduct['name']) => {
-    return await this.db.findOne({ name }).lean();
+    return await this.db.findOne({ name }).exec();
   };
 
   getProductById = async (id: string) => {
-    return await this.db.findOne({ _id: new Types.ObjectId(id) }).lean();
+    return await this.db.findOne({ _id: new Types.ObjectId(id) }).exec();
   };
 
   applyRangeFilter = (
