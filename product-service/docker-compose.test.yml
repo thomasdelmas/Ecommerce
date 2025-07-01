@@ -7,6 +7,7 @@ services:
     environment:
       NODE_ENV: test
       MONGO_URI: mongodb://product-mongodb:27017/
+      REDIS_URL: redis://redis:6379
     command: npm test
     depends_on:
       - product-mongodb
@@ -18,5 +19,12 @@ services:
     volumes:
       - productTestDB:/data/db
 
+  redis:
+    image: redis:alpine
+    restart: always
+    volumes:
+      - productTestCache:/root/redis
+
 volumes:
   productTestDB:
+  productTestCache:
