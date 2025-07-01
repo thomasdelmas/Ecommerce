@@ -14,7 +14,7 @@ class ProductService implements IProductService {
     private productCacheRepository: IProductCacheRepository,
   ) {}
 
-  createProducts = async (inputs: CreateProductsPayload[]) => {
+  async createProducts(inputs: CreateProductsPayload[]) {
     const successful: IProduct[] = [];
     const failed: { input: CreateProductsPayload; reason: string }[] = [];
     let createdProducts: IProduct[] | null = null;
@@ -64,22 +64,22 @@ class ProductService implements IProductService {
     }
 
     return { createdProducts, failed };
-  };
+  }
 
-  getProductWithId = async (id: string) => {
+  async getProductWithId(id: string) {
     try {
       return await this.productDBRepository.getProductById(id);
     } catch (err) {
       console.log('Error in getProductWithId:', err);
       return null;
     }
-  };
+  }
 
-  getProductsWithFilter = async (
+  async getProductsWithFilter(
     filter: IProductFilter,
     page: number,
     productPerPage: number,
-  ) => {
+  ) {
     const filterKey = sha1(JSON.stringify(filter));
     const cacheKey = `filterKey:${filterKey}:page:${page}:productPerPage:${productPerPage}`;
 
@@ -104,7 +104,7 @@ class ProductService implements IProductService {
     }
 
     return filteredProducts;
-  };
+  }
 }
 
 export default ProductService;

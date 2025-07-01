@@ -10,10 +10,10 @@ import type {
 class ProductController implements IProductController {
   constructor(private productService: IProductService) {}
 
-  createProducts = async (
+  async createProducts(
     req: Request<{}, {}, ICreateProductsReqBody>,
     res: Response,
-  ): Promise<any> => {
+  ): Promise<any> {
     let returnStatus;
     let returnMessage;
     try {
@@ -49,12 +49,12 @@ class ProductController implements IProductController {
         res.status(400).json({ message: e.message });
       }
     }
-  };
+  }
 
-  getProductWithId = async (
+  async getProductWithId(
     req: Request<IGetProductWithIdParams, {}, {}>,
     res: Response,
-  ): Promise<any> => {
+  ): Promise<any> {
     try {
       const productId = req.params.id;
 
@@ -76,12 +76,12 @@ class ProductController implements IProductController {
         res.status(400).json({ message: e.message });
       }
     }
-  };
+  }
 
-  getProductsWithFilter = async (
+  async getProductsWithFilter(
     req: Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
     res: Response,
-  ): Promise<any> => {
+  ): Promise<any> {
     try {
       const page = req.query.page || 1;
       const limit = req.query.limit || 20;
@@ -111,7 +111,7 @@ class ProductController implements IProductController {
           .json({ message: 'Failed to get products. Server error.' });
       }
     }
-  };
+  }
 }
 
 export default ProductController;

@@ -10,28 +10,24 @@ import type {
 class ProductDBRepository implements IProductDBRepository {
   constructor(private db: IProductModel) {}
 
-  createProducts = async (products: IProduct[]) => {
+  async createProducts(products: IProduct[]) {
     return await this.db.create(products);
-  };
+  }
 
-  getProductByName = async (name: IProduct['name']) => {
+  async getProductByName(name: IProduct['name']) {
     return await this.db.findOne({ name }).exec();
-  };
+  }
 
-  getProductById = async (id: string) => {
+  async getProductById(id: string) {
     return await this.db.findOne({ _id: id }).exec();
-  };
+  }
 
-  applyRangeFilter = (
-    field: string,
-    filter: RangeFilter<number>,
-    query: any,
-  ) => {
+  applyRangeFilter(field: string, filter: RangeFilter<number>, query: any) {
     if (!filter) return;
     query[field] = {};
     if (filter.min !== undefined) query[field].$gte = filter.min;
     if (filter.max !== undefined) query[field].$lte = filter.max;
-  };
+  }
 
   async getProductsWithFilter(
     filter: IProductFilter,
