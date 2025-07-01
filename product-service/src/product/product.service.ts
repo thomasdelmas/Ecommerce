@@ -85,7 +85,6 @@ class ProductService implements IProductService {
 
     const cachedProducts = await this.productCacheRepository.getEntry(cacheKey);
     if (cachedProducts) {
-      console.log('Cache hit');
       return cachedProducts;
     }
 

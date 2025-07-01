@@ -67,12 +67,6 @@ class ProductDBRepository implements IProductDBRepository {
       };
     }
 
-    console.log(filter);
-    console.log(query);
-    console.log(page);
-    console.log(productPerPage);
-    console.log('\n');
-
     const skip = (page - 1) * productPerPage;
 
     const products = await this.db
