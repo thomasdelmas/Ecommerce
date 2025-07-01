@@ -4,12 +4,14 @@ import {
   RedisClientType,
 } from '@redis/client/dist/lib/client';
 import { ICacheClient } from './types';
+import EventEmitter from 'events';
 
-class CacheClient implements ICacheClient {
+class CacheClient extends EventEmitter implements ICacheClient {
   client: RedisClientType | null;
   isOpen: boolean = false;
 
   constructor(private config: RedisClientOptions) {
+    super();
     this.client = this.create();
   }
 
@@ -18,7 +20,8 @@ class CacheClient implements ICacheClient {
       url: this.config.url,
     })
       .on('error', (err) => {
-        throw new Error('Redis Client Error:' + err);
+        console.error('Redis Client Error:', err);
+        this.emit('error', err);
       })
       .on('reconnecting', () =>
         console.log('Trying to reconnect to cache client...'),

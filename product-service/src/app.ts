@@ -37,10 +37,13 @@ class App {
     this.configureMiddleware();
     const cacheConfig = loadCacheConfig();
     this.cacheClient = new CacheClient(cacheConfig);
+    const cacheConnection = this.cacheClient.get();
+    cacheConnection.on('error', async (err) => {
+      console.error('Critical cache error:', err);
+      await this.stop();
+    });
     const productDBRepository = new ProductDBRepository(models.product);
-    const productCacheRepository = new ProductCacheRepository(
-      this.cacheClient.get(),
-    );
+    const productCacheRepository = new ProductCacheRepository(cacheConnection);
     const productService = new ProductService(
       productDBRepository,
       productCacheRepository,
