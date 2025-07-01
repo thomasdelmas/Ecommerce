@@ -63,7 +63,7 @@ class App {
 
   configureRoutes = () => {
     this.app.post(
-      '/product',
+      '/admin/product',
       createProductsValidation,
       validateRequest,
       verifyJwt({

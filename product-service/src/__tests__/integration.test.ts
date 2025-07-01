@@ -125,7 +125,7 @@ describe('ProductService - Integration tests', () => {
 
     it('should create requested products successfully', async () => {
       const res = await request(appInstance.app)
-        .post('/product')
+        .post('/admin/product')
         .set({ Authorization: adminJwt })
         .send(req);
 
@@ -143,7 +143,9 @@ describe('ProductService - Integration tests', () => {
     });
 
     it('should reject creation without JWT', async () => {
-      const res = await request(appInstance.app).post('/product').send(req);
+      const res = await request(appInstance.app)
+        .post('/admin/product')
+        .send(req);
 
       expect(res.status).toBe(401);
       expect(res.body.message).toBe('No JWT provided');
@@ -157,7 +159,7 @@ describe('ProductService - Integration tests', () => {
       );
 
       const res = await request(appInstance.app)
-        .post('/product')
+        .post('/admin/product')
         .set({ Authorization: userJwt })
         .send(req);
 
@@ -167,7 +169,7 @@ describe('ProductService - Integration tests', () => {
 
     it('should reject some duplicate inputs products and create valid ones', async () => {
       const res = await request(appInstance.app)
-        .post('/product')
+        .post('/admin/product')
         .set({ Authorization: adminJwt })
         .send({
           products: [
@@ -194,7 +196,7 @@ describe('ProductService - Integration tests', () => {
 
     it('should reject the valid product already in DB and create another valid one', async () => {
       const res = await request(appInstance.app)
-        .post('/product')
+        .post('/admin/product')
         .set({ Authorization: adminJwt })
         .send({
           products: [
