@@ -4,14 +4,6 @@ import http from 'http';
 import config from './config/validatedConfig.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import type {
-  GetProfileRequest,
-  IDeleteUserParams,
-  IDeleteUserReqBody,
-  IDeleteUsersReqBody,
-  ILoginRequest,
-  IRegisterRequest,
-} from './user/user.types.js';
 import { models } from './models/init.js';
 import { validateRequest } from './middlewares/validateRequest.js';
 import {
@@ -28,6 +20,15 @@ import UserService from './user/user.service.js';
 import RoleRepository from './role/role.repository.js';
 import { swaggerSpec } from './docs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
+import { RegisterSuccessData, ServiceResponse } from './types/api.types.js';
+import {
+  GetProfileRequest,
+  IDeleteUserParams,
+  IDeleteUserReqBody,
+  IDeleteUsersReqBody,
+  ILoginRequestBody,
+  IRegisterRequestBody,
+} from './types/request.types.js';
 
 export class App {
   app: express.Application;
@@ -92,8 +93,10 @@ export class App {
       '/register',
       registerValidation,
       validateRequest,
-      (req: express.Request<IRegisterRequest>, res: express.Response) =>
-        this.userController.register(req, res),
+      (
+        req: express.Request<{}, {}, IRegisterRequestBody>,
+        res: express.Response<ServiceResponse<RegisterSuccessData>>,
+      ) => this.userController.register(req, res),
     );
 
     /**
@@ -147,8 +150,10 @@ export class App {
       '/login',
       loginValidation,
       validateRequest,
-      (req: express.Request<ILoginRequest>, res: express.Response) =>
-        this.userController.login(req, res),
+      (
+        req: express.Request<{}, {}, ILoginRequestBody>,
+        res: express.Response,
+      ) => this.userController.login(req, res),
     );
     this.app.get(
       '/profile',
