@@ -1,7 +1,18 @@
 import { DeleteResult, HydratedDocument } from 'mongoose';
 import type { IProfile } from '../types/profile.types.js';
-import { JwtPayload } from 'jsonwebtoken';
 import { Request, Response } from 'express';
+import {
+  LoginSuccessData,
+  RegisterSuccessData,
+  ServiceResponse,
+} from '../types/api.types.js';
+import {
+  IDeleteUserParams,
+  IDeleteUserReqBody,
+  IDeleteUsersReqBody,
+  ILoginRequestBody,
+  IRegisterRequestBody,
+} from '../types/request.types.js';
 
 export type IUser = {
   username: string;
@@ -26,35 +37,15 @@ export type IUserService = {
   deleteUsers: (userIds: string[]) => Promise<number | null>;
 };
 
-export type GetProfileRequest = {
-  payload: JwtPayload;
-};
-
-export type IDeleteUserReqBody = {
-  payload: JwtPayload;
-};
-
-export type IDeleteUserParams = {
-  id: string;
-};
-
-export type IDeleteUsersReqBody = {
-  userIds: string[];
-};
-
-export type IRegisterRequest = {
-  username: string;
-  password: string;
-};
-
-export type ILoginRequest = {
-  username: string;
-  password: string;
-};
-
 export type IUserController = {
-  register: (req: Request<IRegisterRequest>, res: Response) => Promise<any>;
-  login: (req: Request<IRegisterRequest>, res: Response) => Promise<any>;
+  register: (
+    req: Request<{}, {}, IRegisterRequestBody>,
+    res: Response<ServiceResponse<RegisterSuccessData>>,
+  ) => Promise<any>;
+  login: (
+    req: Request<{}, {}, ILoginRequestBody>,
+    res: Response<ServiceResponse<LoginSuccessData>>,
+  ) => Promise<any>;
   deleteUsers: (
     req: Request<{}, {}, IDeleteUsersReqBody>,
     res: Response,
