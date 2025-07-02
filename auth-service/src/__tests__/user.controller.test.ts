@@ -9,14 +9,13 @@ import {
 import UserController from '../user/user.controller';
 import { Request, Response } from 'express';
 import { HydratedDocument } from 'mongoose';
-import type {
+import type { IUser, IUserService } from '../user/user.types';
+import type { IProfile } from '../types/profile.types';
+import {
   IDeleteUserParams,
   IDeleteUserReqBody,
   IDeleteUsersReqBody,
-  IUser,
-  IUserService,
-} from '../user/user.types';
-import type { IProfile } from '../types/profile.types';
+} from '../types/request.types';
 
 describe('UserController - register', () => {
   let userServiceMock: jest.Mocked<IUserService>;
@@ -68,12 +67,14 @@ describe('UserController - register', () => {
         'testpass',
       );
       expect(res.json).toHaveBeenCalledWith({
-        user: {
-          id: 'someid',
-          username: 'testuser',
-          role: 'user',
+        success: true,
+        data: {
+          user: {
+            id: 'someid',
+            username: 'testuser',
+            role: 'user',
+          },
         },
-        message: 'Created user testuser',
       });
     });
 
@@ -89,19 +90,27 @@ describe('UserController - register', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Username already taken',
+        success: false,
+        error: {
+          message: 'User already exist',
+          code: 'USER_ALREADY_REGISTERED',
+        },
       });
     });
 
-    it('should return error if registration fails', async () => {
+    it('should return error if registration return null', async () => {
       userServiceMock.findUserByUsername.mockResolvedValue(null);
       userServiceMock.register.mockResolvedValue(null);
 
       await controller.register(req as Request, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Could not register user',
+        success: false,
+        error: {
+          message: 'Internal server error',
+          code: 'INTERNAL_ERROR',
+        },
       });
     });
 
@@ -112,8 +121,14 @@ describe('UserController - register', () => {
 
       await controller.register(req as Request, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: {
+          message: 'DB error',
+          code: 'INTERNAL_ERROR',
+        },
+      });
     });
   });
 
@@ -145,8 +160,8 @@ describe('UserController - register', () => {
         'testpass',
       );
       expect(res.json).toHaveBeenCalledWith({
-        token: token,
-        message: 'Successful login for user ' + 'testuser',
+        success: true,
+        data: { token: token },
       });
     });
 
@@ -155,9 +170,13 @@ describe('UserController - register', () => {
 
       await controller.login(req as Request, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'User does not exist',
+        success: false,
+        error: {
+          message: 'User does not exist',
+          code: 'USER_NOT_FOUND',
+        },
       });
     });
 
@@ -172,9 +191,10 @@ describe('UserController - register', () => {
 
       await controller.login(req as Request, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Username or password is not valid',
+        success: false,
+        error: { message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
       });
     });
 
@@ -185,8 +205,14 @@ describe('UserController - register', () => {
 
       await controller.login(req as Request, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: {
+          message: 'DB error',
+          code: 'INTERNAL_ERROR',
+        },
+      });
     });
   });
 

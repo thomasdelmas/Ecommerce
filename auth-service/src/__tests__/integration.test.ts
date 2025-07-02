@@ -67,7 +67,7 @@ describe('AuthService - Integration tests', () => {
         password: adminUser.password,
       })
       .expect(200)
-      .then((res) => res.body.token);
+      .then((res) => res.body.data.token);
   });
 
   afterAll(async () => {
@@ -83,7 +83,16 @@ describe('AuthService - Integration tests', () => {
         .send(req)
         .expect(201);
 
-      expect(res.body.message).toEqual('Created user ' + req.username);
+      expect(res.body).toMatchObject({
+        success: true,
+        data: {
+          user: {
+            username: req.username,
+            id: expect.any(String),
+            role: 'user',
+          },
+        },
+      });
     });
 
     it('should fail if passwords do not match', async () => {
@@ -106,19 +115,20 @@ describe('AuthService - Integration tests', () => {
 
       expect(res.status).toBe(200);
 
-      const decoded = verify(res.body.token, config.privateKey) as {
+      const decoded = verify(res.body.data.token, config.privateKey) as {
         id: string;
         permissions: string;
       };
 
       expect(decoded).toHaveProperty('id');
       expect(decoded).toHaveProperty('permissions');
-      expect(res.body.message).toBe(
-        'Successful login for user ' + req.username,
-      );
+      expect(res.body).toMatchObject({
+        success: true,
+        data: { token: expect.any(String) },
+      });
 
       // Store token for next tests
-      jwt = res.body.token;
+      jwt = res.body.data.token;
       userId = decoded.id;
     });
 
@@ -130,8 +140,14 @@ describe('AuthService - Integration tests', () => {
 
       const res = await request(appInstance.app).post('/login').send(body);
 
-      expect(res.status).toBe(400);
-      expect(res.body.message).toBe('Username or password is not valid');
+      expect(res.status).toBe(401);
+      expect(res.body).toMatchObject({
+        success: false,
+        error: {
+          message: 'Invalid credentials',
+          code: 'INVALID_CREDENTIALS',
+        },
+      });
     });
   });
 
@@ -268,12 +284,12 @@ describe('AuthService - Integration tests', () => {
         .post('/register')
         .send(user1)
         .expect(201)
-        .then((res) => res.body.user.id);
+        .then((res) => res.body.data.user.id);
       id2 = await request(appInstance.app)
         .post('/register')
         .send(user2)
         .expect(201)
-        .then((res) => res.body.user.id);
+        .then((res) => res.body.data.user.id);
     });
 
     it('should delete users successfully and return confirmation', async () => {
