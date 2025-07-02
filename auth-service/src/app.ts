@@ -26,6 +26,8 @@ import UserRepository from './user/user.repository.js';
 import RoleService from './role/role.service.js';
 import UserService from './user/user.service.js';
 import RoleRepository from './role/role.repository.js';
+import { swaggerSpec } from './docs/swagger.js';
+import swaggerUi from 'swagger-ui-express';
 
 export class App {
   app: express.Application;
@@ -52,6 +54,40 @@ export class App {
   };
 
   configureRoutes = () => {
+    this.app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+    /**
+     * @openapi
+     * /register:
+     *   post:
+     *     summary: Register a new user
+     *     requestBody:
+     *       description: Username, password and password confirmation
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               username:
+     *                 type: string
+     *                 example: john_doe
+     *               password:
+     *                 type: string
+     *                 example: SecurePassword123!
+     *               confirmPassword:
+     *                 type: string
+     *                 example: SecurePassword123!
+     *             required:
+     *               - username
+     *               - password
+     *               - confirmPassword
+     *     responses:
+     *       201:
+     *         description: Created user
+     *       400:
+     *         description: Could not create new user
+     */
     this.app.post(
       '/register',
       registerValidation,
@@ -59,6 +95,54 @@ export class App {
       (req: express.Request<IRegisterRequest>, res: express.Response) =>
         this.userController.register(req, res),
     );
+
+    /**
+     * @openapi
+     * /login:
+     *   post:
+     *     summary: Login user
+     *     requestBody:
+     *       description: Username and password
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               username:
+     *                 type: string
+     *                 example: john_doe
+     *               password:
+     *                 type: string
+     *                 example: SecurePassword123!
+     *             required:
+     *               - username
+     *               - password
+     *     responses:
+     *       200:
+     *         description: login user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 token:
+     *                   type: string
+     *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NWU4ODBlMzQxZDcxNDY5NTM0ZGY0NSIsInBlcm1pc3Npb25zIjpbInJlYWQ6dXNlciIsIndyaXRlOnVzZXIiLCJkZWxldGU6dXNlciIsInJlYWQ6cHJvZHVjdCIsIndyaXRlOnByb2R1Y3QiLCJkZWxldGU6cHJvZHVjdCJdLCJpYXQiOjE3NTE0NjM1NDksImV4cCI6MTc1MTQ2NDQ0OX0.BhWrA0VvcbU3X71qqQf4zLKcpXbhQZ2PR9IpCs7ri2w"
+     *                 message:
+     *                   type: string
+     *                   example: "Successful login for user john_doe"
+     *       400:
+     *         description: Could not log user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                   example: "Successful login for user john_doe"
+     */
     this.app.post(
       '/login',
       loginValidation,
