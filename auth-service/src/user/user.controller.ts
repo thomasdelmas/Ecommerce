@@ -1,74 +1,101 @@
 import express from 'express';
-import type {
+import type { IUserController, IUserService } from './user.types.js';
+import {
+  LoginSuccessData,
+  RegisterSuccessData,
+  ServiceResponse,
+} from '../types/api.types.js';
+import {
   GetProfileRequest,
   IDeleteUserParams,
   IDeleteUserReqBody,
   IDeleteUsersReqBody,
-  IRegisterRequest,
-  IUserController,
-  IUserService,
-} from './user.types.js';
+  ILoginRequestBody,
+  IRegisterRequestBody,
+} from '../types/request.types.js';
 
 class UserController implements IUserController {
   constructor(private userService: IUserService) {}
 
   register = async (
-    req: express.Request<{}, {}, IRegisterRequest>,
-    res: express.Response,
-  ): Promise<any> => {
+    req: express.Request<{}, {}, IRegisterRequestBody>,
+    res: express.Response<ServiceResponse<RegisterSuccessData>>,
+  ): Promise<void> => {
     try {
       const { username, password } = req.body;
 
       const existingUser = await this.userService.findUserByUsername(username);
-
       if (existingUser) {
-        throw new Error('Username already taken');
+        res.status(400).json({
+          success: false,
+          error: {
+            message: 'User already exist',
+            code: 'USER_ALREADY_REGISTERED',
+          },
+        });
+        return;
       }
 
       const createdUser = await this.userService.register(username, password);
-
       if (!createdUser) {
-        throw new Error('Could not register user');
+        throw new Error('Internal server error');
       }
 
       res.status(201).json({
-        user: createdUser,
-        message: 'Created user ' + username,
+        success: true,
+        data: { user: createdUser },
       });
     } catch (e) {
-      if (e instanceof Error) {
-        res.status(400).json({ message: e.message });
-      }
+      res.status(500).json({
+        success: false,
+        error: {
+          message: e instanceof Error ? e.message : 'Internal server error',
+          code: 'INTERNAL_ERROR',
+        },
+      });
     }
   };
 
   login = async (
-    req: express.Request<{}, {}, IRegisterRequest>,
-    res: express.Response,
-  ): Promise<any> => {
+    req: express.Request<{}, {}, ILoginRequestBody>,
+    res: express.Response<ServiceResponse<LoginSuccessData>>,
+  ): Promise<void> => {
     try {
       const { username, password } = req.body;
 
       const existingUser = await this.userService.findUserByUsername(username);
-
       if (!existingUser) {
-        throw new Error('User does not exist');
+        res.status(404).json({
+          success: false,
+          error: { message: 'User does not exist', code: 'USER_NOT_FOUND' },
+        });
+        return;
       }
 
       const token = await this.userService.login(username, password);
-
       if (!token) {
-        throw new Error('Username or password is not valid');
+        res.status(401).json({
+          success: false,
+          error: {
+            message: 'Invalid credentials',
+            code: 'INVALID_CREDENTIALS',
+          },
+        });
+        return;
       }
 
       res.status(200).json({
-        token: token,
-        message: 'Successful login for user ' + username,
+        success: true,
+        data: { token },
       });
     } catch (e) {
-      if (e instanceof Error) {
-        res.status(400).json({ message: e.message });
-      }
+      res.status(500).json({
+        success: false,
+        error: {
+          message: e instanceof Error ? e.message : 'Internal server error',
+          code: 'INTERNAL_ERROR',
+        },
+      });
     }
   };
 
