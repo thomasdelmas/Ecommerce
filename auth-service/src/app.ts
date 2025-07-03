@@ -20,7 +20,14 @@ import UserService from './user/user.service.js';
 import RoleRepository from './role/role.repository.js';
 import { swaggerSpec } from './docs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
-import { RegisterSuccessData, ServiceResponse } from './types/api.types.js';
+import {
+  DeleteUsersSuccessData,
+  DeleteUserSuccessData,
+  GetProfileSuccessData,
+  LoginSuccessData,
+  RegisterSuccessData,
+  ServiceResponse,
+} from './types/api.types.js';
 import {
   GetProfileRequest,
   IDeleteUserParams,
@@ -29,6 +36,7 @@ import {
   ILoginRequestBody,
   IRegisterRequestBody,
 } from './types/request.types.js';
+import { errorHandler } from './middlewares/errorHandler.js';
 
 export class App {
   app: express.Application;
@@ -61,6 +69,8 @@ export class App {
      * @openapi
      * /register:
      *   post:
+     *     tags:
+     *       - Auth
      *     summary: Register a new user
      *     requestBody:
      *       description: Username, password and password confirmation
@@ -68,26 +78,26 @@ export class App {
      *       content:
      *         application/json:
      *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *                 example: john_doe
-     *               password:
-     *                 type: string
-     *                 example: SecurePassword123!
-     *               confirmPassword:
-     *                 type: string
-     *                 example: SecurePassword123!
-     *             required:
-     *               - username
-     *               - password
-     *               - confirmPassword
+     *             $ref: "#/components/schemas/RegisterRequest"
      *     responses:
      *       201:
      *         description: Created user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/RegisterResponse"
      *       400:
-     *         description: Could not create new user
+     *         description: User already exist
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/AlreadyExistError"
+     *       500:
+     *         description: Internal server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/InternalError"
      */
     this.app.post(
       '/register',
@@ -103,48 +113,42 @@ export class App {
      * @openapi
      * /login:
      *   post:
-     *     summary: Login user
+     *     tags:
+     *       - Auth
+     *     summary: Login a user and return a JWT token
+     *     description: Authenticates a user by verifying the provided username and password.
      *     requestBody:
-     *       description: Username and password
+     *       description: Credentials for login
      *       required: true
      *       content:
      *         application/json:
      *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *                 example: john_doe
-     *               password:
-     *                 type: string
-     *                 example: SecurePassword123!
-     *             required:
-     *               - username
-     *               - password
+     *             $ref: "#/components/schemas/LoginRequest"
      *     responses:
      *       200:
-     *         description: login user
+     *         description: Successful login with JWT token
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 token:
-     *                   type: string
-     *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NWU4ODBlMzQxZDcxNDY5NTM0ZGY0NSIsInBlcm1pc3Npb25zIjpbInJlYWQ6dXNlciIsIndyaXRlOnVzZXIiLCJkZWxldGU6dXNlciIsInJlYWQ6cHJvZHVjdCIsIndyaXRlOnByb2R1Y3QiLCJkZWxldGU6cHJvZHVjdCJdLCJpYXQiOjE3NTE0NjM1NDksImV4cCI6MTc1MTQ2NDQ0OX0.BhWrA0VvcbU3X71qqQf4zLKcpXbhQZ2PR9IpCs7ri2w"
-     *                 message:
-     *                   type: string
-     *                   example: "Successful login for user john_doe"
-     *       400:
-     *         description: Could not log user
+     *               $ref: "#/components/schemas/LoginResponse"
+     *       401:
+     *         description: Invalid username or password
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 message:
-     *                   type: string
-     *                   example: "Successful login for user john_doe"
+     *               $ref: "#/components/schemas/InvalidCredentialsError"
+     *       404:
+     *         description: User not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/UserNotFoundError"
+     *       500:
+     *         description: Internal server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/InternalError"
      */
     this.app.post(
       '/login',
@@ -152,32 +156,165 @@ export class App {
       validateRequest,
       (
         req: express.Request<{}, {}, ILoginRequestBody>,
-        res: express.Response,
+        res: express.Response<ServiceResponse<LoginSuccessData>>,
       ) => this.userController.login(req, res),
     );
+
+    /**
+     * @openapi
+     * /profile:
+     *   post:
+     *     tags:
+     *       - Auth
+     *     summary: Get the authenticated user's profile
+     *     description: Requires a valid JWT token in the Authorization header. Returns the user's profile including permissions.
+     *     security:
+     *       - bearerAuth: []
+     *     requestBody:
+     *       description: Payload containing the user ID (typically injected via middleware after verifying JWT)
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/GetProfileRequest'
+     *     responses:
+     *       200:
+     *         description: User profile fetched successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/GetProfileResponse'
+     *       401:
+     *         description: Unauthorized - Missing or invalid token
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/UnauthorizedError'
+     *       404:
+     *         description: User not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/UserNotFoundError"
+     *       500:
+     *         description: Internal server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/InternalError'
+     */
     this.app.get(
       '/profile',
       verifyToken,
-      (req: express.Request<GetProfileRequest>, res: express.Response) =>
-        this.userController.getProfile(req, res),
-    );
-    this.app.delete(
-      '/user',
-      deleteAdminValidation,
-      validateRequest,
-      verifyToken,
-      authorize(['delete:user']),
       (
-        req: express.Request<{}, {}, IDeleteUsersReqBody>,
-        res: express.Response,
-      ) => this.userController.deleteUsers(req, res),
-    );
+        req: express.Request<{}, {}, GetProfileRequest>,
+        res: express.Response<ServiceResponse<GetProfileSuccessData>>,
+      ) => this.userController.getProfile(req, res),
+    ),
+      /**
+       * @openapi
+       * /admin/user:
+       *   delete:
+       *     tags:
+       *       - Auth
+       *     summary: Delete users with provided ids
+       *     description: Requires a valid JWT token `delete:user` permission in the Authorization header. Returns the id list of deleted user.
+       *     security:
+       *       - bearerAuth: []
+       *     requestBody:
+       *       description: List of users IDs
+       *       required: true
+       *       content:
+       *         application/json:
+       *           schema:
+       *             $ref: '#/components/schemas/DeleteUsersRequest'
+       *     responses:
+       *       200:
+       *         description: Users deleted successfully
+       *         content:
+       *           application/json:
+       *             schema:
+       *               $ref: '#/components/schemas/DeleteUsersResponse'
+       *       401:
+       *         description: Unauthorized - Missing or invalid token
+       *         content:
+       *           application/json:
+       *             schema:
+       *               $ref: '#/components/schemas/UnauthorizedError'
+       *       403:
+       *         description: Forbidden - Lack of required permissions
+       *         content:
+       *           application/json:
+       *             schema:
+       *               $ref: '#/components/schemas/ForbiddenError'
+       *       500:
+       *         description: Internal server error
+       *         content:
+       *           application/json:
+       *             schema:
+       *               $ref: '#/components/schemas/InternalError'
+       */
+      this.app.delete(
+        '/admin/user',
+        deleteAdminValidation,
+        validateRequest,
+        verifyToken,
+        authorize(['delete:user']),
+        (
+          req: express.Request<{}, {}, IDeleteUsersReqBody>,
+          res: express.Response<ServiceResponse<DeleteUsersSuccessData>>,
+        ) => this.userController.deleteUsers(req, res),
+      );
+
+    /**
+     * @openapi
+     * /user:
+     *   delete:
+     *     tags:
+     *       - Auth
+     *     summary: Delete authenticated user
+     *     description: Requires a valid JWT token in the Authorization header. Returns the user id.
+     *     security:
+     *       - bearerAuth: []
+     *     requestBody:
+     *       description: User ID
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: '#/components/schemas/DeleteUserRequest'
+     *     responses:
+     *       200:
+     *         description: User deleted successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/DeleteUserResponse'
+     *       401:
+     *         description: Unauthorized - Missing or invalid token
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/UnauthorizedError'
+     *       403:
+     *         description: Forbidden - Lack of required permissions
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ForbiddenError'
+     *       500:
+     *         description: Internal server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/InternalError'
+     */
     this.app.delete(
       '/user/:id',
       verifyToken,
       (
         req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
-        res: express.Response,
+        res: express.Response<ServiceResponse<DeleteUserSuccessData>>,
       ) => this.userController.deleteUser(req, res),
     );
 
@@ -185,6 +322,8 @@ export class App {
     this.app.get('/', (req: express.Request, res: express.Response) => {
       res.status(200).json({ status: 'ok' });
     });
+
+    this.app.use(errorHandler);
   };
 
   connectDBWithRetry = async (
