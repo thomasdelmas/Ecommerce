@@ -159,16 +159,17 @@ describe('AuthService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(200);
-
-      expect(res.body.profile).toEqual(
-        expect.objectContaining({
-          id: userId,
-          username: user.username,
-          role: 'user',
-          permissions: expect.arrayContaining(['read:product']),
-        }),
-      );
-      expect(res.body.message).toBe('Profile for user ID ' + userId);
+      expect(res.body).toMatchObject({
+        success: true,
+        data: {
+          profile: expect.objectContaining({
+            id: userId,
+            username: user.username,
+            role: 'user',
+            permissions: expect.arrayContaining(['read:product']),
+          }),
+        },
+      });
     });
 
     it('should fail if no Authorization header with jwt', async () => {
@@ -235,9 +236,12 @@ describe('AuthService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(200);
-      expect(res.body.message).toStrictEqual(
-        'Successfuly delete user with id: ' + userId,
-      );
+      expect(res.body).toMatchObject({
+        success: true,
+        data: {
+          id: userId,
+        },
+      });
     });
 
     it('should fail if invalid jwt', async () => {
@@ -257,7 +261,7 @@ describe('AuthService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(403);
-      expect(res.body.message).toBe('Forbidden');
+      expect(res.body.error.message).toBe('Forbidden operation');
     });
   });
 
@@ -297,14 +301,15 @@ describe('AuthService - Integration tests', () => {
         userIds: [id1, id2],
       };
       const res = await request(appInstance.app)
-        .delete('/user')
+        .delete('/admin/user')
         .set({ Authorization: adminJwt })
         .send(req);
 
       expect(res.status).toBe(200);
-      expect(res.body.message).toStrictEqual(
-        'Successfuly delete users with ids: ' + req.userIds.join(', '),
-      );
+      expect(res.body).toMatchObject({
+        success: true,
+        data: { ids: req.userIds },
+      });
     });
 
     it('should fail if invalid jwt', async () => {
@@ -312,7 +317,7 @@ describe('AuthService - Integration tests', () => {
         userIds: [id1, id2],
       };
       const res = await request(appInstance.app)
-        .delete('/user')
+        .delete('/admin/user')
         .set({ Authorization: 'badToken' })
         .send(req);
 
@@ -325,7 +330,7 @@ describe('AuthService - Integration tests', () => {
         userIds: [id1, id2],
       };
       const res = await request(appInstance.app)
-        .delete('/user')
+        .delete('/admin/user')
         .set({ Authorization: jwt })
         .send(req);
 

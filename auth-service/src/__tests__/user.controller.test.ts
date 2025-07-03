@@ -16,6 +16,7 @@ import {
   IDeleteUserReqBody,
   IDeleteUsersReqBody,
 } from '../types/request.types';
+import { ApiError } from '../errors/apiError';
 
 describe('UserController - register', () => {
   let userServiceMock: jest.Mocked<IUserService>;
@@ -24,7 +25,6 @@ describe('UserController - register', () => {
   let res: Partial<Response>;
 
   beforeEach(() => {
-    // Create mocks
     userServiceMock = {
       findUserByUsername: jest.fn(),
       register: jest.fn(),
@@ -86,32 +86,28 @@ describe('UserController - register', () => {
         role: '',
       } as unknown as HydratedDocument<IUser>);
 
-      await controller.register(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: {
-          message: 'User already exist',
-          code: 'USER_ALREADY_REGISTERED',
-        },
-      });
+      try {
+        await controller.register(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(400);
+        expect((e as ApiError).code).toBe('USER_ALREADY_REGISTERED');
+        expect((e as ApiError).message).toBe('User already exist');
+      }
     });
 
     it('should return error if registration return null', async () => {
       userServiceMock.findUserByUsername.mockResolvedValue(null);
       userServiceMock.register.mockResolvedValue(null);
 
-      await controller.register(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: {
-          message: 'Internal server error',
-          code: 'INTERNAL_ERROR',
-        },
-      });
+      try {
+        await controller.register(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(500);
+        expect((e as ApiError).message).toBe('Internal server error');
+        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+      }
     });
 
     it('should handle service errors gracefully', async () => {
@@ -119,16 +115,14 @@ describe('UserController - register', () => {
         new Error('DB error'),
       );
 
-      await controller.register(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: {
-          message: 'DB error',
-          code: 'INTERNAL_ERROR',
-        },
-      });
+      try {
+        await controller.register(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(500);
+        expect((e as ApiError).message).toBe('DB error');
+        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+      }
     });
   });
 
@@ -168,16 +162,14 @@ describe('UserController - register', () => {
     it('should return error if username does not exist', async () => {
       userServiceMock.findUserByUsername.mockResolvedValue(null);
 
-      await controller.login(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: {
-          message: 'User does not exist',
-          code: 'USER_NOT_FOUND',
-        },
-      });
+      try {
+        await controller.login(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(404);
+        expect((e as ApiError).message).toBe('User does not exist');
+        expect((e as ApiError).code).toBe('USER_NOT_FOUND');
+      }
     });
 
     it('should return error if login return a null token', async () => {
@@ -189,13 +181,14 @@ describe('UserController - register', () => {
       } as unknown as HydratedDocument<IUser>);
       userServiceMock.login.mockResolvedValue(null);
 
-      await controller.login(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: { message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
-      });
+      try {
+        await controller.login(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(401);
+        expect((e as ApiError).message).toBe('Invalid credentials');
+        expect((e as ApiError).code).toBe('INVALID_CREDENTIALS');
+      }
     });
 
     it('should handle service errors gracefully', async () => {
@@ -203,16 +196,14 @@ describe('UserController - register', () => {
         new Error('DB error'),
       );
 
-      await controller.login(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        success: false,
-        error: {
-          message: 'DB error',
-          code: 'INTERNAL_ERROR',
-        },
-      });
+      try {
+        await controller.login(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(500);
+        expect((e as ApiError).message).toBe('DB error');
+        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+      }
     });
   });
 
@@ -237,29 +228,33 @@ describe('UserController - register', () => {
 
       expect(userServiceMock.getProfile).toHaveBeenCalledWith(id);
       expect(res.json).toHaveBeenCalledWith({
-        profile: mockedProfile,
-        message: 'Profile for user ID ' + id,
+        success: true,
+        data: { profile: mockedProfile },
       });
     });
 
     it('should return error if getProfile return a null profile', async () => {
       userServiceMock.getProfile.mockResolvedValue(null);
-
-      await controller.getProfile(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Could not get profile',
-      });
+      try {
+        await controller.getProfile(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(404);
+        expect((e as ApiError).message).toBe('User does not exist');
+        expect((e as ApiError).code).toBe('USER_NOT_FOUND');
+      }
     });
 
     it('should handle service errors gracefully', async () => {
       userServiceMock.getProfile.mockRejectedValue(new Error('DB error'));
-
-      await controller.getProfile(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      try {
+        await controller.getProfile(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(500);
+        expect((e as ApiError).message).toBe('DB error');
+        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+      }
     });
   });
 
@@ -282,50 +277,58 @@ describe('UserController - register', () => {
 
       expect(userServiceMock.deleteUsers).toHaveBeenCalledWith([id]);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Successfuly delete user with id: ' + id,
+        success: true,
+        data: { id: id },
       });
     });
 
     it('should return Forbidden error if IDs mismatch', async () => {
       req = { body: { payload: { id: id } }, params: { id: 'differentId' } };
-
-      await controller.deleteUser(
-        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
-        res as Response,
-      );
-
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Forbidden' });
+      try {
+        await controller.deleteUser(
+          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(403);
+        expect((e as ApiError).message).toBe('Forbidden operation');
+        expect((e as ApiError).code).toBe('FORBIDDEN');
+      }
     });
 
     it('should return error if deleteUsers return null', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
       userServiceMock.deleteUsers.mockResolvedValue(null);
-
-      await controller.deleteUser(
-        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
-        res as Response,
-      );
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Could not delete user',
-      });
+      try {
+        await controller.deleteUser(
+          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(400);
+        expect((e as ApiError).message).toBe('Could not delete users');
+        expect((e as ApiError).code).toBe('NO_USER_DELETED');
+      }
     });
 
     it('should handle service errors gracefully', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
       userServiceMock.deleteUsers.mockRejectedValue(new Error('DB error'));
-
-      await controller.deleteUser(
-        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
-        res as Response,
-      );
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      try {
+        await controller.deleteUser(
+          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(500);
+        expect((e as ApiError).message).toBe('DB error');
+        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+      }
     });
   });
 
@@ -350,7 +353,8 @@ describe('UserController - register', () => {
 
       expect(userServiceMock.deleteUsers).toHaveBeenCalledWith([id1, id2]);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Successfuly delete users with ids: ' + [id1, id2].join(', '),
+        success: true,
+        data: { ids: [id1, id2] },
       });
     });
 
@@ -358,30 +362,34 @@ describe('UserController - register', () => {
       req = { body: { userIds: [id1, id2] } };
 
       userServiceMock.deleteUsers.mockResolvedValue(null);
-
-      await controller.deleteUsers(
-        req as Request<{}, {}, IDeleteUsersReqBody>,
-        res as Response,
-      );
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Could not delete users',
-      });
+      try {
+        await controller.deleteUsers(
+          req as Request<{}, {}, IDeleteUsersReqBody>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(400);
+        expect((e as ApiError).message).toBe('Could not delete users');
+        expect((e as ApiError).code).toBe('NO_USER_DELETED');
+      }
     });
 
     it('should handle service errors gracefully', async () => {
       req = { body: { userIds: [id1, id2] } };
 
       userServiceMock.deleteUsers.mockRejectedValue(new Error('DB error'));
-
-      await controller.deleteUsers(
-        req as Request<{}, {}, IDeleteUsersReqBody>,
-        res as Response,
-      );
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      try {
+        await controller.deleteUsers(
+          req as Request<{}, {}, IDeleteUsersReqBody>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(500);
+        expect((e as ApiError).message).toBe('DB error');
+        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+      }
     });
   });
 });
