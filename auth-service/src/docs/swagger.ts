@@ -217,6 +217,28 @@ export const swaggerSpec = swaggerJSDoc({
             },
           },
         },
+        PartialUsersDeleteResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false,
+            },
+            error: {
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string',
+                  example: 'Partialy deleted users',
+                },
+                code: {
+                  type: 'string',
+                  example: 'PARTIAL_USERS_DELETE',
+                },
+              },
+            },
+          },
+        },
         AlreadyExistError: {
           type: 'object',
           properties: {

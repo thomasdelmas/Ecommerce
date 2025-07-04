@@ -125,21 +125,21 @@ class UserController implements IUserController {
   ): Promise<void> => {
     try {
       const { userIds } = req.body;
+      let returnStatus;
 
       const result = await this.userService.deleteUsers(userIds);
       if (result.successIds.length < 1) {
-        throw new ApiError(400, 'Could not delete users', 'NO_USER_DELETED');
+        returnStatus = 400;
       } else if (result.successIds.length < userIds.length) {
-        res.status(207).json({
-          success: true,
-          data: { ...result },
-        });
+        returnStatus = 207;
       } else {
-        res.status(200).json({
-          success: true,
-          data: { ...result },
-        });
+        returnStatus = 200;
       }
+
+      res.status(returnStatus).json({
+        success: true,
+        data: { ...result },
+      });
     } catch (e) {
       if (e instanceof ApiError) {
         throw e;

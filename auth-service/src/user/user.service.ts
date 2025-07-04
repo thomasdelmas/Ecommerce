@@ -106,22 +106,31 @@ class UserService implements IUserService {
   deleteUsers = async (userIds: string[]) => {
     const foundUsers = await this.userRepository.getUsersById(userIds);
     const foundUserIds = foundUsers.map((user) => user.id);
-
-    let failedIds = userIds.filter((id) => !foundUserIds.includes(id));
+    const notFoundIds = userIds.filter((id) => !foundUserIds.includes(id));
+    let failed = notFoundIds.map((id) => ({
+      id: id,
+      reason: 'User not found',
+    }));
 
     const deletionResult = await this.userRepository.deleteUsers(foundUserIds);
     if (deletionResult.deletedCount < foundUserIds.length) {
       const stillExistingUsers =
         await this.userRepository.getUsersById(foundUserIds);
       const stillExistingIds = stillExistingUsers.map((user) => user.id);
-      failedIds = failedIds.concat(stillExistingIds);
+      failed = failed.concat(
+        stillExistingIds.map((id) => ({
+          id: id,
+          reason: 'Could not delete user',
+        })),
+      );
     }
 
-    const successIds = foundUserIds.filter((id) => !failedIds.includes(id));
+    const allFailedIds = failed.map((n) => n.id);
+    const successIds = foundUserIds.filter((id) => !allFailedIds.includes(id));
 
     return {
       successIds,
-      failedIds,
+      failed,
     };
   };
 

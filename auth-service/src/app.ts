@@ -235,6 +235,12 @@ export class App {
        *           application/json:
        *             schema:
        *               $ref: '#/components/schemas/DeleteUsersResponse'
+       *       207:
+       *         description: Partialy deleted users
+       *         content:
+       *           application/json:
+       *             schema:
+       *               $ref: '#/components/schemas/PartialUsersDeleteResponse'
        *       401:
        *         description: Unauthorized - Missing or invalid token
        *         content:

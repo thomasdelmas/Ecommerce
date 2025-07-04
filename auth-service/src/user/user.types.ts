@@ -44,8 +44,10 @@ export type IUserService = {
   getProfile: (id: string) => Promise<IProfile | null>;
   deleteUsers: (
     userIds: string[],
-  ) => Promise<{ successIds: string[]; failedIds: string[] }>;
-  deleteUser: (userId: string) => Promise<string | null>;
+  ) => Promise<{
+    successIds: string[];
+    failed: { id: string; reason: string }[];
+  }>;
   deleteUser: (id: string) => Promise<string | null>;
 };
 

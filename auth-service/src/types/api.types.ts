@@ -19,7 +19,7 @@ export interface GetProfileSuccessData {
 
 export interface DeleteUsersSuccessData {
   successIds: string[];
-  failedIds: string[];
+  failed: { id: string; reason: string }[];
 }
 
 export interface DeleteUserSuccessData {
