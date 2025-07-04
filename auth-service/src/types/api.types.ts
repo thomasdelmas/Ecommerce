@@ -1,12 +1,12 @@
-import { IUser } from '../user/user.types';
-import { IProfile } from './profile.types';
+import type { IUserSecure } from '../user/user.types';
+import type { IProfile } from './profile.types';
 
 export type ServiceResponse<T = any> =
   | { success: true; data: T }
   | { success: false; error: { message: string; code: string } };
 
 export interface RegisterSuccessData {
-  user: IUser;
+  user: IUserSecure;
 }
 
 export interface LoginSuccessData {
@@ -18,7 +18,8 @@ export interface GetProfileSuccessData {
 }
 
 export interface DeleteUsersSuccessData {
-  ids: string[];
+  successIds: string[];
+  failedIds: string[];
 }
 
 export interface DeleteUserSuccessData {

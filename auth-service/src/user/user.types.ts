@@ -2,6 +2,8 @@ import { DeleteResult, HydratedDocument } from 'mongoose';
 import type { IProfile } from '../types/profile.types.js';
 import { Request, Response } from 'express';
 import {
+  DeleteUsersSuccessData,
+  DeleteUserSuccessData,
   LoginSuccessData,
   RegisterSuccessData,
   ServiceResponse,
@@ -14,27 +16,35 @@ import {
   IRegisterRequestBody,
 } from '../types/request.types.js';
 
-export type IUser = {
+export interface IUser {
+  id: string;
   username: string;
   hash: string;
   role: string;
-};
+}
+
+export type IUserCreation = Omit<IUser, 'id'>;
+export type IUserSecure = Omit<IUser, 'hash'>;
 
 export type IUserRepository = {
-  createUsers: (user: IUser[]) => Promise<IUser[]>;
-  getUserByUsername: (
-    username: IUser['username'],
-  ) => Promise<HydratedDocument<IUser> | null>;
+  createUsers: (user: IUserCreation[]) => Promise<IUserSecure[]>;
+  getUserByUsername: (username: string) => Promise<IUser | null>;
+  getUsersById: (ids: string[]) => Promise<IUser[]>;
   getUserById: (id: string) => Promise<IUser | null>;
   deleteUsers: (ids: string[]) => Promise<DeleteResult>;
+  toIUserSecure: (doc: HydratedDocument<IUser>) => IUserSecure;
+  toIUser: (doc: HydratedDocument<IUser>) => IUser;
 };
 
 export type IUserService = {
-  register: (username: string, password: string) => Promise<IUser | null>;
+  register: (username: string, password: string) => Promise<IUserSecure | null>;
   login: (username: string, password: string) => Promise<string | null>;
   findUserByUsername: (username: string) => Promise<IUser | null>;
   getProfile: (id: string) => Promise<IProfile | null>;
-  deleteUsers: (userIds: string[]) => Promise<number | null>;
+  deleteUsers: (
+    userIds: string[],
+  ) => Promise<{ successIds: string[]; failedIds: string[] }>;
+  deleteUser: (userId: string) => Promise<string | null>;
 };
 
 export type IUserController = {
@@ -48,10 +58,10 @@ export type IUserController = {
   ) => Promise<any>;
   deleteUsers: (
     req: Request<{}, {}, IDeleteUsersReqBody>,
-    res: Response,
+    res: Response<ServiceResponse<DeleteUsersSuccessData>>,
   ) => Promise<any>;
   deleteUser: (
     req: Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
-    res: Response,
+    res: Response<ServiceResponse<DeleteUserSuccessData>>,
   ) => Promise<any>;
 };
