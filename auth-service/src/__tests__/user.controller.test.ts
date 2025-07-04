@@ -31,12 +31,13 @@ describe('UserController - register', () => {
       login: jest.fn(),
       getProfile: jest.fn(),
       deleteUsers: jest.fn(),
+      deleteUser: jest.fn(),
     } as unknown as jest.Mocked<IUserService>;
 
     controller = new UserController(userServiceMock);
 
     res = {
-      json: jest.fn().mockReturnThis(),
+      json: jest.fn(),
       status: jest.fn().mockReturnThis(),
     } as unknown as Response;
   });
@@ -268,14 +269,15 @@ describe('UserController - register', () => {
     it('should delete a user succesfully', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
-      userServiceMock.deleteUsers.mockResolvedValue(1);
+      userServiceMock.deleteUser.mockResolvedValue(id);
 
       await controller.deleteUser(
         req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
         res as Response,
       );
 
-      expect(userServiceMock.deleteUsers).toHaveBeenCalledWith([id]);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(userServiceMock.deleteUser).toHaveBeenCalledWith(id);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: { id: id },
@@ -297,10 +299,10 @@ describe('UserController - register', () => {
       }
     });
 
-    it('should return error if deleteUsers return null', async () => {
+    it('should return error if no user deleted', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
-      userServiceMock.deleteUsers.mockResolvedValue(null);
+      userServiceMock.deleteUser.mockResolvedValue(null);
       try {
         await controller.deleteUser(
           req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
@@ -309,7 +311,7 @@ describe('UserController - register', () => {
       } catch (e) {
         expect(e).toBeInstanceOf(ApiError);
         expect((e as ApiError).status).toBe(400);
-        expect((e as ApiError).message).toBe('Could not delete users');
+        expect((e as ApiError).message).toBe('Could not delete user');
         expect((e as ApiError).code).toBe('NO_USER_DELETED');
       }
     });
@@ -317,7 +319,7 @@ describe('UserController - register', () => {
     it('should handle service errors gracefully', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
-      userServiceMock.deleteUsers.mockRejectedValue(new Error('DB error'));
+      userServiceMock.deleteUser.mockRejectedValue(new Error('DB error'));
       try {
         await controller.deleteUser(
           req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
@@ -344,24 +346,57 @@ describe('UserController - register', () => {
     it('should delete a user succesfully', async () => {
       req = { body: { userIds: [id1, id2] } };
 
-      userServiceMock.deleteUsers.mockResolvedValue(2);
+      userServiceMock.deleteUsers.mockResolvedValue({
+        successIds: [id1, id2],
+        failedIds: [],
+      });
 
       await controller.deleteUsers(
         req as Request<{}, {}, IDeleteUsersReqBody>,
         res as Response,
       );
 
+      expect(res.status).toHaveBeenCalledWith(200);
       expect(userServiceMock.deleteUsers).toHaveBeenCalledWith([id1, id2]);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        data: { ids: [id1, id2] },
+        data: {
+          successIds: [id1, id2],
+          failedIds: [],
+        },
       });
     });
 
-    it('should return error if deleteUsers return null', async () => {
+    it('should return partial success if not all provided ids are deleted', async () => {
       req = { body: { userIds: [id1, id2] } };
 
-      userServiceMock.deleteUsers.mockResolvedValue(null);
+      userServiceMock.deleteUsers.mockResolvedValue({
+        successIds: [id2],
+        failedIds: [id1],
+      });
+
+      await controller.deleteUsers(
+        req as Request<{}, {}, IDeleteUsersReqBody>,
+        res as Response,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(207);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: {
+          successIds: [id2],
+          failedIds: [id1],
+        },
+      });
+    });
+
+    it('should return error if deleteUsers return no successIds', async () => {
+      req = { body: { userIds: [id1, id2] } };
+
+      userServiceMock.deleteUsers.mockResolvedValue({
+        successIds: [],
+        failedIds: [id1, id2],
+      });
       try {
         await controller.deleteUsers(
           req as Request<{}, {}, IDeleteUsersReqBody>,

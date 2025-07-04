@@ -308,7 +308,10 @@ describe('AuthService - Integration tests', () => {
       expect(res.status).toBe(200);
       expect(res.body).toMatchObject({
         success: true,
-        data: { ids: req.userIds },
+        data: {
+          successIds: [id1, id2],
+          failedIds: [],
+        },
       });
     });
 

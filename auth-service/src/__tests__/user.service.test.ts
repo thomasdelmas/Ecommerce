@@ -1,6 +1,13 @@
-import { jest, describe, expect, beforeEach, it } from '@jest/globals';
+import {
+  jest,
+  describe,
+  expect,
+  beforeEach,
+  it,
+  afterEach,
+} from '@jest/globals';
 import UserService from '../user/user.service';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { IRoleService } from '../role/role.types';
@@ -22,6 +29,7 @@ describe('UserService', () => {
     userRepositoryMock = {
       createUsers: jest.fn(),
       getUserByUsername: jest.fn(),
+      getUsersById: jest.fn(),
       getUserById: jest.fn(),
       deleteUsers: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
@@ -37,7 +45,7 @@ describe('UserService', () => {
     id = 'ffffffffffffffffffffffff';
 
     mockUser = {
-      _id: new Types.ObjectId('ffffffffffffffffffffffff'),
+      id: 'ffffffffffffffffffffffff',
       username,
       role: 'user',
     } as unknown as HydratedDocument<IUser>;
@@ -54,9 +62,7 @@ describe('UserService', () => {
         capturedHashedPassword = usersData[0].hash;
         return usersData.map((user) => ({
           ...user,
-          _id: new Types.ObjectId('ffffffffffffffffffffffff'),
-          toObject: jest.fn().mockReturnValue(user),
-          toJSON: jest.fn().mockReturnValue(user),
+          id: 'ffffffffffffffffffffffff',
         })) as unknown as HydratedDocument<IUser>[];
       });
 
@@ -78,14 +84,11 @@ describe('UserService', () => {
       );
       expect(isPasswordCorrect).toBe(true);
 
-      expect(result).toEqual(
-        expect.objectContaining({
-          _id: new Types.ObjectId('ffffffffffffffffffffffff'),
-          hash: capturedHashedPassword,
-          username,
-          role: 'user',
-        }),
-      );
+      expect(result).toMatchObject({
+        id: 'ffffffffffffffffffffffff',
+        username,
+        role: 'user',
+      });
     });
 
     it('should return null when repository throws an error', async () => {
@@ -145,7 +148,7 @@ describe('UserService', () => {
         'user',
       );
       expect(jwt.sign).toHaveBeenCalledWith(
-        { id: mockUser._id, permissions: ['read:user', 'write:user'] },
+        { id: mockUser.id, permissions: ['read:user', 'write:user'] },
         expect.any(String),
         expect.objectContaining({
           expiresIn: expect.any(String),
@@ -207,7 +210,7 @@ describe('UserService', () => {
         'user',
       );
       expect(user).toStrictEqual({
-        id: mockUser._id.toString(),
+        id: mockUser.id,
         username: mockUser.username,
         role: mockUser.role,
         permissions: ['read:user', 'write:user'],
@@ -243,31 +246,74 @@ describe('UserService', () => {
   });
 
   describe('DeleteUsers', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('should deleteUsers and return delete count', async () => {
+      userRepositoryMock.getUsersById.mockResolvedValue([
+        { ...mockUser, id: 'ffffffffffffffffffffffff', username: 'f' },
+        { ...mockUser, id: 'gggggggggggggggggggggggg', username: 'g' },
+      ]);
       userRepositoryMock.deleteUsers.mockResolvedValue({
         acknowledged: true,
         deletedCount: 2,
       });
 
-      const count = await service.deleteUsers([
+      const res = await service.deleteUsers([
         'ffffffffffffffffffffffff',
         'gggggggggggggggggggggggg',
       ]);
 
-      expect(count).toBe(2);
+      expect(res).toMatchObject({
+        failedIds: [],
+        successIds: ['ffffffffffffffffffffffff', 'gggggggggggggggggggggggg'],
+      });
+    });
+
+    it('should partialy deleteUsers', async () => {
+      userRepositoryMock.getUsersById.mockResolvedValueOnce([
+        { ...mockUser, id: 'ffffffffffffffffffffffff', username: 'f' },
+        { ...mockUser, id: 'gggggggggggggggggggggggg', username: 'g' },
+      ]);
+      userRepositoryMock.deleteUsers.mockResolvedValue({
+        acknowledged: true,
+        deletedCount: 1,
+      });
+      userRepositoryMock.getUsersById.mockResolvedValueOnce([
+        { ...mockUser, id: 'ffffffffffffffffffffffff', username: 'f' },
+      ]);
+
+      const res = await service.deleteUsers([
+        'ffffffffffffffffffffffff',
+        'gggggggggggggggggggggggg',
+      ]);
+
+      expect(userRepositoryMock.getUsersById).toHaveBeenCalledTimes(2);
+      expect(res).toMatchObject({
+        failedIds: ['ffffffffffffffffffffffff'],
+        successIds: ['gggggggggggggggggggggggg'],
+      });
     });
 
     it('should return null and handle exceptions', async () => {
+      userRepositoryMock.getUsersById.mockResolvedValue([
+        { ...mockUser, id: 'ffffffffffffffffffffffff', username: 'f' },
+        { ...mockUser, id: 'gggggggggggggggggggggggg', username: 'g' },
+      ]);
       userRepositoryMock.deleteUsers.mockRejectedValue(
         new Error('USERDB error'),
       );
 
-      const user = await service.deleteUsers([
-        'ffffffffffffffffffffffff',
-        'gggggggggggggggggggggggg',
-      ]);
-
-      expect(user).toBeNull();
+      try {
+        await service.deleteUsers([
+          'ffffffffffffffffffffffff',
+          'gggggggggggggggggggggggg',
+        ]);
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('USERDB error');
+      }
     });
   });
 });

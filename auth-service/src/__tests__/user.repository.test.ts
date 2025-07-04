@@ -10,7 +10,7 @@ import {
 import UserRepository from '../user/user.repository';
 import { DeleteResult, HydratedDocument, Types } from 'mongoose';
 import { IUserModel } from '../types/db.types';
-import { IUser } from '../user/user.types';
+import { IUser, IUserCreation, IUserSecure } from '../user/user.types';
 
 describe('UserRepository', () => {
   let repository: UserRepository;
@@ -28,6 +28,7 @@ describe('UserRepository', () => {
     dbMock = {
       create: jest.fn(),
       findOne: jest.fn(),
+      find: jest.fn(),
       deleteMany: jest.fn(),
     } as unknown as jest.Mocked<IUserModel>;
 
@@ -36,16 +37,29 @@ describe('UserRepository', () => {
 
   describe('createUser', () => {
     it('should call db.create with user data and return result', async () => {
-      const user: IUser = { username: 'test', hash: 'hashed', role: '' };
+      const user: IUserCreation = {
+        username: 'test',
+        hash: 'hashed',
+        role: '',
+      };
+      const expectedUser: IUserSecure = {
+        username: 'test',
+        role: '',
+        id: 'ffffffffffffffffffffffff',
+      };
       const createdUser = [
-        { ...user, _id: 'someid' },
+        {
+          ...user,
+          _id: new Types.ObjectId('ffffffffffffffffffffffff'),
+          toObject: jest.fn().mockReturnValue(user),
+        },
       ] as unknown as HydratedDocument<IUser>[];
       dbMock.create.mockResolvedValue(createdUser);
 
       const result = await repository.createUsers([user]);
 
       expect(dbMock.create).toHaveBeenCalledWith([user]);
-      expect(result).toBe(createdUser);
+      expect(result).toStrictEqual([expectedUser]);
     });
 
     it('should propagate errors if db.create throws', async () => {
@@ -61,18 +75,27 @@ describe('UserRepository', () => {
   describe('getUserByUsername', () => {
     it('should call db.findOne with username filter and return user', async () => {
       const username = 'testuser';
-      const userDoc = {
+      const user = {
         username,
-        password: 'hashed',
+        hash: 'hashed',
         role: '',
+      };
+      const userDoc = {
+        ...user,
         _id: '123',
+        toObject: jest.fn().mockReturnValue(user),
       } as unknown as HydratedDocument<IUser>;
 
       dbMock.findOne.mockResolvedValue(userDoc);
       const result = await repository.getUserByUsername(username);
 
       expect(dbMock.findOne).toHaveBeenCalledWith({ username });
-      expect(result).toBe(userDoc);
+      expect(result).toMatchObject({
+        username,
+        hash: 'hashed',
+        role: '',
+        id: '123',
+      });
     });
 
     it('should return null if db.findOne returns null', async () => {
@@ -97,20 +120,28 @@ describe('UserRepository', () => {
   describe('getUserById', () => {
     it('should call db.findOne with username filter and return user', async () => {
       const id = 'ffffffffffffffffffffffff';
+      const user = {
+        username: 'user_test',
+        hash: 'hashed',
+        role: '',
+      };
       const userDoc = {
         _id: new Types.ObjectId(id),
-        username: 'user_test',
-        password: 'hashed',
-        role: '',
+        toObject: jest.fn().mockReturnValue(user),
       } as unknown as HydratedDocument<IUser>;
 
-      dbMock.findOne.mockResolvedValue(userDoc);
+      dbMock.find.mockResolvedValue([userDoc]);
       const result = await repository.getUserById(id);
 
-      expect(dbMock.findOne).toHaveBeenCalledWith({
-        _id: new Types.ObjectId(id),
+      expect(dbMock.find).toHaveBeenCalledWith({
+        _id: { $in: [id] },
       });
-      expect(result).toBe(userDoc);
+      expect(result).toMatchObject({
+        id,
+        username: 'user_test',
+        hash: 'hashed',
+        role: '',
+      });
     });
 
     it('should return null if db.findOne returns null', async () => {
@@ -136,7 +167,7 @@ describe('UserRepository', () => {
     it('should call db.deleteMany with ids filter and return DeleteResult', async () => {
       const ids = ['ffffffffffffffffffffffff', 'gggggggggggggggggggggggg'];
       const deleteResult = {
-        acknoledged: true,
+        acknowledged: true,
         deletedCount: 2,
       } as unknown as DeleteResult;
 
