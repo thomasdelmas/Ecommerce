@@ -266,7 +266,7 @@ describe('UserService', () => {
       ]);
 
       expect(res).toMatchObject({
-        failedIds: [],
+        failed: [],
         successIds: ['ffffffffffffffffffffffff', 'gggggggggggggggggggggggg'],
       });
     });
@@ -291,7 +291,9 @@ describe('UserService', () => {
 
       expect(userRepositoryMock.getUsersById).toHaveBeenCalledTimes(2);
       expect(res).toMatchObject({
-        failedIds: ['ffffffffffffffffffffffff'],
+        failed: [
+          { id: 'ffffffffffffffffffffffff', reason: 'Could not delete user' },
+        ],
         successIds: ['gggggggggggggggggggggggg'],
       });
     });

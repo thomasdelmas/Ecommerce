@@ -27,6 +27,7 @@ describe('UserController - register', () => {
   beforeEach(() => {
     userServiceMock = {
       findUserByUsername: jest.fn(),
+      findUserById: jest.fn(),
       register: jest.fn(),
       login: jest.fn(),
       getProfile: jest.fn(),
@@ -269,6 +270,12 @@ describe('UserController - register', () => {
     it('should delete a user succesfully', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
+      userServiceMock.findUserById.mockResolvedValue({
+        id: id,
+        username: 'osdifj',
+        role: 'foeijf',
+        hash: 'fo',
+      });
       userServiceMock.deleteUser.mockResolvedValue(id);
 
       await controller.deleteUser(
@@ -299,9 +306,32 @@ describe('UserController - register', () => {
       }
     });
 
-    it('should return error if no user deleted', async () => {
+    it('should return error if could not find user in db', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
+      userServiceMock.findUserById.mockResolvedValue(null);
+      try {
+        await controller.deleteUser(
+          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ApiError);
+        expect((e as ApiError).status).toBe(404);
+        expect((e as ApiError).message).toBe('User does not exist');
+        expect((e as ApiError).code).toBe('USER_NOT_FOUND');
+      }
+    });
+
+    it('should return error if could not delete user', async () => {
+      req = { body: { payload: { id: id } }, params: { id: id } };
+
+      userServiceMock.findUserById.mockResolvedValue({
+        id: id,
+        username: 'osdifj',
+        role: 'foeijf',
+        hash: 'fo',
+      });
       userServiceMock.deleteUser.mockResolvedValue(null);
       try {
         await controller.deleteUser(
@@ -319,6 +349,12 @@ describe('UserController - register', () => {
     it('should handle service errors gracefully', async () => {
       req = { body: { payload: { id: id } }, params: { id: id } };
 
+      userServiceMock.findUserById.mockResolvedValue({
+        id: id,
+        username: 'osdifj',
+        role: 'foeijf',
+        hash: 'fo',
+      });
       userServiceMock.deleteUser.mockRejectedValue(new Error('DB error'));
       try {
         await controller.deleteUser(
@@ -348,7 +384,7 @@ describe('UserController - register', () => {
 
       userServiceMock.deleteUsers.mockResolvedValue({
         successIds: [id1, id2],
-        failedIds: [],
+        failed: [],
       });
 
       await controller.deleteUsers(
@@ -362,7 +398,7 @@ describe('UserController - register', () => {
         success: true,
         data: {
           successIds: [id1, id2],
-          failedIds: [],
+          failed: [],
         },
       });
     });
@@ -372,7 +408,7 @@ describe('UserController - register', () => {
 
       userServiceMock.deleteUsers.mockResolvedValue({
         successIds: [id2],
-        failedIds: [id1],
+        failed: [{ id: id1, reason: 'User not found' }],
       });
 
       await controller.deleteUsers(
@@ -385,7 +421,7 @@ describe('UserController - register', () => {
         success: true,
         data: {
           successIds: [id2],
-          failedIds: [id1],
+          failed: [{ id: id1, reason: 'User not found' }],
         },
       });
     });
@@ -395,19 +431,27 @@ describe('UserController - register', () => {
 
       userServiceMock.deleteUsers.mockResolvedValue({
         successIds: [],
-        failedIds: [id1, id2],
+        failed: [
+          { id: id1, reason: 'User not found' },
+          { id: id2, reason: 'Could not delete user' },
+        ],
       });
-      try {
-        await controller.deleteUsers(
-          req as Request<{}, {}, IDeleteUsersReqBody>,
-          res as Response,
-        );
-      } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(400);
-        expect((e as ApiError).message).toBe('Could not delete users');
-        expect((e as ApiError).code).toBe('NO_USER_DELETED');
-      }
+      await controller.deleteUsers(
+        req as Request<{}, {}, IDeleteUsersReqBody>,
+        res as Response,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: {
+          successIds: [],
+          failed: [
+            { id: id1, reason: 'User not found' },
+            { id: id2, reason: 'Could not delete user' },
+          ],
+        },
+      });
     });
 
     it('should handle service errors gracefully', async () => {

@@ -310,7 +310,7 @@ describe('AuthService - Integration tests', () => {
         success: true,
         data: {
           successIds: [id1, id2],
-          failedIds: [],
+          failed: [],
         },
       });
     });
