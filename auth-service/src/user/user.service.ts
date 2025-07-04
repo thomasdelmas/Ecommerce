@@ -51,7 +51,7 @@ class UserService implements IUserService {
 
       const token = jwt.sign(
         {
-          id: user._id,
+          id: user.id,
           permissions: permissions,
         },
         config.privateKey,
@@ -68,7 +68,6 @@ class UserService implements IUserService {
   getProfile = async (id: string) => {
     try {
       const user = await this.userRepository.getUserById(id);
-
       if (!user) {
         throw new Error('User not found');
       }
@@ -105,14 +104,32 @@ class UserService implements IUserService {
   };
 
   deleteUsers = async (userIds: string[]) => {
-    try {
-      const res = await this.userRepository.deleteUsers(userIds);
+    const foundUsers = await this.userRepository.getUsersById(userIds);
+    const foundUserIds = foundUsers.map((user) => user.id);
 
-      return res ? res.deletedCount : null;
-    } catch (err) {
-      console.error('Error in deleteUsers:', err);
-      return null;
+    let failedIds = userIds.filter((id) => !foundUserIds.includes(id));
+
+    const deletionResult = await this.userRepository.deleteUsers(foundUserIds);
+    if (deletionResult.deletedCount < foundUserIds.length) {
+      const stillExistingUsers =
+        await this.userRepository.getUsersById(foundUserIds);
+      const stillExistingIds = stillExistingUsers.map((user) => user.id);
+      failedIds = failedIds.concat(stillExistingIds);
     }
+
+    const successIds = foundUserIds.filter((id) => !failedIds.includes(id));
+
+    return {
+      successIds,
+      failedIds,
+    };
+  };
+
+  deleteUser = async (userId: string) => {
+    const deleteResult = await this.deleteUsers([userId]);
+    return deleteResult.successIds.length == 1
+      ? deleteResult.successIds[0]
+      : null;
   };
 }
 
