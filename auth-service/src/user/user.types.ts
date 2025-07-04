@@ -40,11 +40,13 @@ export type IUserService = {
   register: (username: string, password: string) => Promise<IUserSecure | null>;
   login: (username: string, password: string) => Promise<string | null>;
   findUserByUsername: (username: string) => Promise<IUser | null>;
+  findUserById: (id: string) => Promise<IUser | null>;
   getProfile: (id: string) => Promise<IProfile | null>;
   deleteUsers: (
     userIds: string[],
   ) => Promise<{ successIds: string[]; failedIds: string[] }>;
   deleteUser: (userId: string) => Promise<string | null>;
+  deleteUser: (id: string) => Promise<string | null>;
 };
 
 export type IUserController = {

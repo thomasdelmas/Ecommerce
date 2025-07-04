@@ -125,11 +125,15 @@ class UserService implements IUserService {
     };
   };
 
-  deleteUser = async (userId: string) => {
-    const deleteResult = await this.deleteUsers([userId]);
+  deleteUser = async (id: string) => {
+    const deleteResult = await this.deleteUsers([id]);
     return deleteResult.successIds.length == 1
       ? deleteResult.successIds[0]
       : null;
+  };
+
+  findUserById = async (id: string) => {
+    return await this.userRepository.getUserById(id);
   };
 }
 

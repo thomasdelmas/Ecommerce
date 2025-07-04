@@ -302,6 +302,12 @@ export class App {
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/ForbiddenError'
+     *       404:
+     *         description: User not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/UserNotFoundError"
      *       500:
      *         description: Internal server error
      *         content:

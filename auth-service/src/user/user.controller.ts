@@ -164,6 +164,11 @@ class UserController implements IUserController {
         throw new ApiError(403, 'Forbidden operation', 'FORBIDDEN');
       }
 
+      const foundUser = await this.userService.findUserById(userId);
+      if (!foundUser) {
+        throw new ApiError(404, 'User does not exist', 'USER_NOT_FOUND');
+      }
+
       const result = await this.userService.deleteUser(userId);
       if (!result) {
         throw new ApiError(400, 'Could not delete user', 'NO_USER_DELETED');
