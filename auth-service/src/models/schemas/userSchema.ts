@@ -1,7 +1,12 @@
 import { Schema } from 'mongoose';
-import type { IUser } from '../../user/user.types.js';
 
-const UserSchema = new Schema<IUser>({
+export interface IUserSchema {
+  username: string;
+  hash: string;
+  role: string;
+}
+
+const UserSchema = new Schema<IUserSchema>({
   username: {
     type: String,
     required: true,
@@ -13,16 +18,6 @@ const UserSchema = new Schema<IUser>({
   role: {
     type: String,
     required: false,
-  },
-});
-
-UserSchema.set('toJSON', {
-  transform: (_doc, ret) => {
-    ret.id = ret._id.toString();
-    delete ret.hash;
-    delete ret._id;
-    delete ret.__v;
-    return ret;
   },
 });
 
