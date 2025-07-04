@@ -127,14 +127,19 @@ class UserController implements IUserController {
       const { userIds } = req.body;
 
       const result = await this.userService.deleteUsers(userIds);
-      if (!result) {
+      if (result.successIds.length < 1) {
         throw new ApiError(400, 'Could not delete users', 'NO_USER_DELETED');
+      } else if (result.successIds.length < userIds.length) {
+        res.status(207).json({
+          success: true,
+          data: { ...result },
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          data: { ...result },
+        });
       }
-
-      res.status(200).json({
-        success: true,
-        data: { ids: userIds },
-      });
     } catch (e) {
       if (e instanceof ApiError) {
         throw e;
@@ -159,14 +164,14 @@ class UserController implements IUserController {
         throw new ApiError(403, 'Forbidden operation', 'FORBIDDEN');
       }
 
-      const result = await this.userService.deleteUsers([userId]);
+      const result = await this.userService.deleteUser(userId);
       if (!result) {
-        throw new ApiError(400, 'Could not delete users', 'NO_USER_DELETED');
+        throw new ApiError(400, 'Could not delete user', 'NO_USER_DELETED');
       }
 
       res.status(200).json({
         success: true,
-        data: { id: userId },
+        data: { id: result },
       });
     } catch (e) {
       if (e instanceof ApiError) {
