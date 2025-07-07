@@ -4,7 +4,7 @@ export type IRole = {
 };
 
 export type IRoleService = {
-  getPermissionsForRole: (name: string) => Promise<string[] | null>;
+  getPermissionsForRole: (name: string) => Promise<string[]>;
 };
 
 export type IRoleRepository = {
