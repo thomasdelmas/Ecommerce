@@ -5,7 +5,7 @@ class RoleRepository implements IRoleRepository {
   constructor(private db: IRoleModel) {}
 
   getRole = async (role: string) => {
-    return this.db.findOne({ role });
+    return await this.db.findOne({ role });
   };
 }
 
