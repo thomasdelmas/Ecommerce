@@ -4,6 +4,7 @@ import config from '../config/validatedConfig.js';
 import type { IProfile } from '../types/profile.types.js';
 import type { IRoleService } from '../role/role.types.js';
 import type { IUserRepository, IUserService } from './user.types.js';
+import { Errors } from './user.error.js';
 
 class UserService implements IUserService {
   constructor(
@@ -12,95 +13,63 @@ class UserService implements IUserService {
   ) {}
 
   register = async (username: string, password: string) => {
-    try {
-      const salt = bcrypt.genSaltSync(10);
-      const hashedPassword = bcrypt.hashSync(password, salt);
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
 
-      const newUsers = await this.userRepository.createUsers([
-        { username: username, hash: hashedPassword, role: 'user' },
-      ]);
+    const newUsers = await this.userRepository.createUsers([
+      { username: username, hash: hashedPassword, role: 'user' },
+    ]);
 
-      return newUsers[0];
-    } catch (err) {
-      console.error('Error in register:', err);
-      return null;
-    }
+    return newUsers[0];
   };
 
   login = async (username: string, password: string) => {
-    try {
-      const user = await this.findUserByUsername(username);
+    const user = await this.findUserByUsername(username);
 
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      const isMatch = bcrypt.compareSync(password, user.hash);
-
-      if (!isMatch) {
-        throw new Error('Invalid password');
-      }
-
-      const permissions = await this.roleService.getPermissionsForRole(
-        user.role,
-      );
-
-      if (!permissions) {
-        throw new Error('Error in getPermissionsForRole');
-      }
-
-      const token = jwt.sign(
-        {
-          id: user.id,
-          permissions: permissions,
-        },
-        config.privateKey,
-        { expiresIn: '15min' },
-      );
-
-      return token;
-    } catch (err) {
-      console.error('Error in login:', err);
-      return null;
+    if (!user) {
+      throw Errors.UserNotFound();
     }
+
+    const isMatch = bcrypt.compareSync(password, user.hash);
+
+    if (!isMatch) {
+      throw Errors.InvalidPassword();
+    }
+
+    const permissions = await this.roleService.getPermissionsForRole(user.role);
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        permissions: permissions,
+      },
+      config.privateKey,
+      { expiresIn: '15min' },
+    );
+
+    return token;
   };
 
   getProfile = async (id: string) => {
-    try {
-      const user = await this.userRepository.getUserById(id);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      const permissions = await this.roleService.getPermissionsForRole(
-        user.role,
-      );
-
-      if (!permissions) {
-        throw new Error('Error in getPermissionsForRole');
-      }
-
-      const profile = {
-        id: id,
-        username: user.username,
-        role: user.role,
-        permissions: permissions,
-      } as IProfile;
-
-      return profile;
-    } catch (err) {
-      console.error('Error in getProfile:', err);
-      return null;
+    const user = await this.userRepository.getUserById(id);
+    if (!user) {
+      throw Errors.UserNotFound();
     }
+
+    const permissions = await this.roleService.getPermissionsForRole(user.role);
+
+    const profile = {
+      id: id,
+      username: user.username,
+      role: user.role,
+      permissions: permissions,
+    } as IProfile;
+
+    return profile;
   };
 
   findUserByUsername = async (username: string) => {
-    try {
-      return await this.userRepository.getUserByUsername(username);
-    } catch (err) {
-      console.error('Error in findUserByUsername:', err);
-      return null;
-    }
+    return await this.userRepository.getUserByUsername(username);
   };
 
   deleteUsers = async (userIds: string[]) => {
