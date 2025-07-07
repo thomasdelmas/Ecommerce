@@ -42,9 +42,7 @@ export type IUserService = {
   findUserByUsername: (username: string) => Promise<IUser | null>;
   findUserById: (id: string) => Promise<IUser | null>;
   getProfile: (id: string) => Promise<IProfile | null>;
-  deleteUsers: (
-    userIds: string[],
-  ) => Promise<{
+  deleteUsers: (userIds: string[]) => Promise<{
     successIds: string[];
     failed: { id: string; reason: string }[];
   }>;
