@@ -5,6 +5,7 @@ import {
   beforeEach,
   it,
   afterEach,
+  afterAll,
 } from '@jest/globals';
 import UserService from '../user/user.service';
 import { HydratedDocument } from 'mongoose';
@@ -233,7 +234,7 @@ describe('UserService', () => {
       jest.clearAllMocks();
     });
 
-    it('should deleteUsers and return delete count', async () => {
+    it('should deleteUsers and return a result object', async () => {
       userRepositoryMock.getUsersById.mockResolvedValue([
         { ...mockUser, id: 'ffffffffffffffffffffffff', username: 'f' },
         { ...mockUser, id: 'gggggggggggggggggggggggg', username: 'g' },
@@ -295,6 +296,57 @@ describe('UserService', () => {
           'ffffffffffffffffffffffff',
           'gggggggggggggggggggggggg',
         ]);
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('USERDB error');
+      }
+    });
+  });
+
+  describe('DeleteUser', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should return the id when deleted a user', async () => {
+      const userService = new UserService(userRepositoryMock, roleServiceMock);
+
+      jest.spyOn(userService, 'deleteUsers').mockResolvedValue({
+        failed: [],
+        successIds: ['ffffffffffffffffffffffff'],
+      });
+
+      const res = await userService.deleteUser('ffffffffffffffffffffffff');
+
+      expect(res).toBe('ffffffffffffffffffffffff');
+    });
+
+    it('should return null when failed to delete', async () => {
+      const userService = new UserService(userRepositoryMock, roleServiceMock);
+
+      jest.spyOn(userService, 'deleteUsers').mockResolvedValue({
+        failed: [{ id: 'ffffffffffffffffffffffff', reason: 'some reason' }],
+        successIds: [],
+      });
+
+      const res = await userService.deleteUser('ffffffffffffffffffffffff');
+
+      expect(res).toBe(null);
+    });
+
+    it('should buble up exceptions', async () => {
+      const userService = new UserService(userRepositoryMock, roleServiceMock);
+
+      jest
+        .spyOn(userService, 'deleteUsers')
+        .mockRejectedValue(new Error('USERDB error'));
+
+      try {
+        await userService.deleteUser('ffffffffffffffffffffffff');
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
         expect((e as Error).message).toBe('USERDB error');

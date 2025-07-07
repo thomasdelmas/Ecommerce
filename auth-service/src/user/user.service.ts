@@ -105,6 +105,7 @@ class UserService implements IUserService {
 
   deleteUser = async (id: string) => {
     const deleteResult = await this.deleteUsers([id]);
+
     return deleteResult.successIds.length == 1
       ? deleteResult.successIds[0]
       : null;
