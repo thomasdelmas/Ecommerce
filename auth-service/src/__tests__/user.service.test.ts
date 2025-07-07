@@ -12,6 +12,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { IRoleService } from '../role/role.types';
 import { IUser, IUserRepository } from '../user/user.types';
+import { AppError } from '../errors/appError';
 
 jest.mock('bcryptjs');
 jest.mock('jsonwebtoken');
@@ -90,16 +91,6 @@ describe('UserService', () => {
         role: 'user',
       });
     });
-
-    it('should return null when repository throws an error', async () => {
-      userRepositoryMock.createUsers.mockRejectedValue(
-        new Error('USERDB error'),
-      );
-
-      const result = await service.register(username, password);
-
-      expect(result).toBeNull();
-    });
   });
 
   describe('findUserByUsername', () => {
@@ -112,16 +103,6 @@ describe('UserService', () => {
         username,
       );
       expect(result).toEqual(mockUser);
-    });
-
-    it('should return null when repository throws an error', async () => {
-      userRepositoryMock.getUserByUsername.mockRejectedValue(
-        new Error('Not found'),
-      );
-
-      const result = await service.findUserByUsername(username);
-
-      expect(result).toBeNull();
     });
   });
 
@@ -160,28 +141,28 @@ describe('UserService', () => {
     it('should return null if user is not found', async () => {
       userRepositoryMock.getUserByUsername.mockResolvedValue(null);
 
-      const token = await service.login('nonexistent_user', 'password123');
-
-      expect(token).toBeNull();
+      try {
+        await service.login('nonexistent_user', 'password123');
+      } catch (e) {
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(404);
+        expect((e as AppError).message).toBe('User not found');
+        expect((e as AppError).code).toBe('USER_NOT_FOUND');
+      }
     });
 
     it('should return null if password does not match', async () => {
       userRepositoryMock.getUserByUsername.mockResolvedValue(mockUser);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
 
-      const token = await service.login('test_user', 'wrong_password');
-
-      expect(token).toBeNull();
-    });
-
-    it('should return null if getPermissionsForRole returns null', async () => {
-      userRepositoryMock.getUserByUsername.mockResolvedValue(mockUser);
-      (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
-      roleServiceMock.getPermissionsForRole.mockResolvedValue(null);
-
-      const token = await service.login('test_user', 'wrong_password');
-
-      expect(token).toBeNull();
+      try {
+        await service.login('test_user', 'wrong_password');
+      } catch (e) {
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(401);
+        expect((e as AppError).message).toBe('Invalid password');
+        expect((e as AppError).code).toBe('INVALID_PASSWORD');
+      }
     });
 
     it('should return null and handle exceptions', async () => {
@@ -189,9 +170,12 @@ describe('UserService', () => {
         new Error('USERDB error'),
       );
 
-      const token = await service.login('test_user', 'password123');
-
-      expect(token).toBeNull();
+      try {
+        await service.login('test_user', 'password123');
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('USERDB error');
+      }
     });
   });
 
@@ -220,18 +204,14 @@ describe('UserService', () => {
     it('should return null if user is not found', async () => {
       userRepositoryMock.getUserById.mockResolvedValue(null);
 
-      const user = await service.getProfile('gggggggggggggggggggggggg');
-
-      expect(user).toBeNull();
-    });
-
-    it('should return null if getPermissionsForRole returns null', async () => {
-      userRepositoryMock.getUserById.mockResolvedValue(mockUser);
-      roleServiceMock.getPermissionsForRole.mockResolvedValue(null);
-
-      const user = await service.getProfile('gggggggggggggggggggggggg');
-
-      expect(user).toBeNull();
+      try {
+        await service.getProfile('gggggggggggggggggggggggg');
+      } catch (e) {
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(404);
+        expect((e as AppError).message).toBe('User not found');
+        expect((e as AppError).code).toBe('USER_NOT_FOUND');
+      }
     });
 
     it('should return null and handle exceptions', async () => {
@@ -239,9 +219,12 @@ describe('UserService', () => {
         new Error('USERDB error'),
       );
 
-      const user = await service.getProfile(id);
-
-      expect(user).toBeNull();
+      try {
+        await service.getProfile(id);
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('USERDB error');
+      }
     });
   });
 

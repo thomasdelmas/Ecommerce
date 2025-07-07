@@ -144,8 +144,8 @@ describe('AuthService - Integration tests', () => {
       expect(res.body).toMatchObject({
         success: false,
         error: {
-          message: 'Invalid credentials',
-          code: 'INVALID_CREDENTIALS',
+          message: 'Invalid password',
+          code: 'INVALID_PASSWORD',
         },
       });
     });

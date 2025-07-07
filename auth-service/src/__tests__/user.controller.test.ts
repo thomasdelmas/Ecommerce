@@ -16,7 +16,7 @@ import {
   IDeleteUserReqBody,
   IDeleteUsersReqBody,
 } from '../types/request.types';
-import { ApiError } from '../errors/apiError';
+import { AppError } from '../errors/appError';
 
 describe('UserController - register', () => {
   let userServiceMock: jest.Mocked<IUserService>;
@@ -91,10 +91,10 @@ describe('UserController - register', () => {
       try {
         await controller.register(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(400);
-        expect((e as ApiError).code).toBe('USER_ALREADY_REGISTERED');
-        expect((e as ApiError).message).toBe('User already exist');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(400);
+        expect((e as AppError).code).toBe('USER_ALREADY_REGISTERED');
+        expect((e as AppError).message).toBe('User already exist');
       }
     });
 
@@ -105,10 +105,10 @@ describe('UserController - register', () => {
       try {
         await controller.register(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(500);
-        expect((e as ApiError).message).toBe('Internal server error');
-        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(500);
+        expect((e as AppError).message).toBe('Failed to register user');
+        expect((e as AppError).code).toBe('FAILED_TO_REGISTER');
       }
     });
 
@@ -120,10 +120,8 @@ describe('UserController - register', () => {
       try {
         await controller.register(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(500);
-        expect((e as ApiError).message).toBe('DB error');
-        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
       }
     });
   });
@@ -167,10 +165,10 @@ describe('UserController - register', () => {
       try {
         await controller.login(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(404);
-        expect((e as ApiError).message).toBe('User does not exist');
-        expect((e as ApiError).code).toBe('USER_NOT_FOUND');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(404);
+        expect((e as AppError).message).toBe('User not found');
+        expect((e as AppError).code).toBe('USER_NOT_FOUND');
       }
     });
 
@@ -186,10 +184,10 @@ describe('UserController - register', () => {
       try {
         await controller.login(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(401);
-        expect((e as ApiError).message).toBe('Invalid credentials');
-        expect((e as ApiError).code).toBe('INVALID_CREDENTIALS');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(401);
+        expect((e as AppError).message).toBe('Invalid password');
+        expect((e as AppError).code).toBe('INVALID_PASSWORD');
       }
     });
 
@@ -201,10 +199,8 @@ describe('UserController - register', () => {
       try {
         await controller.login(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(500);
-        expect((e as ApiError).message).toBe('DB error');
-        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
       }
     });
   });
@@ -240,10 +236,10 @@ describe('UserController - register', () => {
       try {
         await controller.getProfile(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(404);
-        expect((e as ApiError).message).toBe('User does not exist');
-        expect((e as ApiError).code).toBe('USER_NOT_FOUND');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(404);
+        expect((e as AppError).message).toBe('User not found');
+        expect((e as AppError).code).toBe('USER_NOT_FOUND');
       }
     });
 
@@ -252,10 +248,8 @@ describe('UserController - register', () => {
       try {
         await controller.getProfile(req as Request, res as Response);
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(500);
-        expect((e as ApiError).message).toBe('DB error');
-        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
       }
     });
   });
@@ -299,10 +293,10 @@ describe('UserController - register', () => {
           res as Response,
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(403);
-        expect((e as ApiError).message).toBe('Forbidden operation');
-        expect((e as ApiError).code).toBe('FORBIDDEN');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(403);
+        expect((e as AppError).message).toBe('Forbidden operation');
+        expect((e as AppError).code).toBe('FORBIDDEN');
       }
     });
 
@@ -316,10 +310,10 @@ describe('UserController - register', () => {
           res as Response,
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(404);
-        expect((e as ApiError).message).toBe('User does not exist');
-        expect((e as ApiError).code).toBe('USER_NOT_FOUND');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(404);
+        expect((e as AppError).message).toBe('User not found');
+        expect((e as AppError).code).toBe('USER_NOT_FOUND');
       }
     });
 
@@ -339,10 +333,10 @@ describe('UserController - register', () => {
           res as Response,
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(400);
-        expect((e as ApiError).message).toBe('Could not delete user');
-        expect((e as ApiError).code).toBe('NO_USER_DELETED');
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(500);
+        expect((e as AppError).message).toBe('Failed to delete user');
+        expect((e as AppError).code).toBe('FAILED_TO_DELETE');
       }
     });
 
@@ -362,10 +356,8 @@ describe('UserController - register', () => {
           res as Response,
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(500);
-        expect((e as ApiError).message).toBe('DB error');
-        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
       }
     });
   });
@@ -436,22 +428,26 @@ describe('UserController - register', () => {
           { id: id2, reason: 'Could not delete user' },
         ],
       });
-      await controller.deleteUsers(
-        req as Request<{}, {}, IDeleteUsersReqBody>,
-        res as Response,
-      );
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        data: {
-          successIds: [],
+      try {
+        await controller.deleteUsers(
+          req as Request<{}, {}, IDeleteUsersReqBody>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(500);
+        expect((e as AppError).message).toBe(
+          'One or more users could not be deleted',
+        );
+        expect((e as AppError).code).toBe('USER_DELETION_FAILED');
+        expect((e as AppError).meta).toMatchObject({
           failed: [
             { id: id1, reason: 'User not found' },
             { id: id2, reason: 'Could not delete user' },
           ],
-        },
-      });
+        });
+      }
     });
 
     it('should handle service errors gracefully', async () => {
@@ -464,10 +460,8 @@ describe('UserController - register', () => {
           res as Response,
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(500);
-        expect((e as ApiError).message).toBe('DB error');
-        expect((e as ApiError).code).toBe('INTERNAL_ERROR');
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
       }
     });
   });
