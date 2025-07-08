@@ -69,7 +69,7 @@ class UserController implements IUserController {
     req: express.Request<{}, {}, GetProfileRequest>,
     res: express.Response<ServiceResponse<GetProfileSuccessData>>,
   ): Promise<void> => {
-    const { id } = req.body.payload;
+    const { id } = (req as any).payload;
 
     const profile = await this.userService.getProfile(id);
     if (!profile) {
@@ -108,7 +108,7 @@ class UserController implements IUserController {
     req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
     res: express.Response<ServiceResponse<DeleteUserSuccessData>>,
   ): Promise<void> => {
-    const tokenId = req.body.payload.id;
+    const tokenId = (req as any).payload.id;
     const userId = req.params.id;
 
     if (userId !== tokenId) {
