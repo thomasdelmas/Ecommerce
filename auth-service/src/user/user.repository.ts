@@ -14,7 +14,9 @@ class UserRepository implements IUserRepository {
 
   createUsers = async (users: IUserCreation[]) => {
     const newDocs = await this.db.create(users);
-    return newDocs.map((doc: HydratedDocument<IUserSchema>) => this.toIUserSecure(doc));
+    return newDocs.map((doc: HydratedDocument<IUserSchema>) =>
+      this.toIUserSecure(doc),
+    );
   };
 
   getUserByUsername = async (username: string) => {

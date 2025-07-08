@@ -52,9 +52,6 @@ class UserController implements IUserController {
     }
 
     const token = await this.userService.login(username, password);
-    if (!token) {
-      throw Errors.InvalidPassword();
-    }
 
     res.status(200).json({
       success: true,

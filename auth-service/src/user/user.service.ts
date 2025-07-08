@@ -25,13 +25,11 @@ class UserService implements IUserService {
 
   login = async (username: string, password: string) => {
     const user = await this.findUserByUsername(username);
-
     if (!user) {
       throw Errors.UserNotFound();
     }
 
     const isMatch = bcrypt.compareSync(password, user.hash);
-
     if (!isMatch) {
       throw Errors.InvalidPassword();
     }
