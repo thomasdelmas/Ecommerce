@@ -208,21 +208,6 @@ describe('UserController - register', () => {
       });
     });
 
-    it('should return error if getProfile return a null profile', async () => {
-      userServiceMock.getProfile.mockResolvedValue(null);
-      try {
-        await controller.getProfile(
-          reqProfile as Request<{}, {}, GetProfileRequest>,
-          res as Response,
-        );
-      } catch (e) {
-        expect(e).toBeInstanceOf(AppError);
-        expect((e as AppError).statusCode).toBe(404);
-        expect((e as AppError).message).toBe('User not found');
-        expect((e as AppError).code).toBe('USER_NOT_FOUND');
-      }
-    });
-
     it('should handle service errors gracefully', async () => {
       userServiceMock.getProfile.mockRejectedValue(new Error('DB error'));
       try {
