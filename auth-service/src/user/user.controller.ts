@@ -66,9 +66,6 @@ class UserController implements IUserController {
     const { id } = (req as any).payload;
 
     const profile = await this.userService.getProfile(id);
-    if (!profile) {
-      throw Errors.UserNotFound();
-    }
 
     res.status(200).json({
       success: true,
