@@ -11,8 +11,6 @@ import {
   loginValidation,
   registerValidation,
 } from './validators/userValidator.js';
-import { verifyToken } from './middlewares/verifyToken.js';
-import { authorize } from './middlewares/authorize.js';
 import UserController from './user/user.controller.js';
 import UserRepository from './user/user.repository.js';
 import RoleService from './role/role.service.js';
@@ -37,6 +35,7 @@ import {
   IRegisterRequestBody,
 } from './types/request.types.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { authorize, verifyJwt } from '@thomasdelmas/jwt-middlewares';
 
 export class App {
   app: express.Application;
@@ -203,9 +202,11 @@ export class App {
      *             schema:
      *               $ref: '#/components/schemas/InternalError'
      */
-    this.app.get(
+    (this.app.get(
       '/profile',
-      verifyToken,
+      verifyJwt({
+        secretOrPublicKey: config.privateKey,
+      }),
       (
         req: express.Request<{}, {}, GetProfileRequest>,
         res: express.Response<ServiceResponse<GetProfileSuccessData>>,
@@ -264,13 +265,17 @@ export class App {
         '/admin/user',
         deleteAdminValidation,
         validateRequest,
-        verifyToken,
-        authorize(['delete:user']),
+        verifyJwt({
+          secretOrPublicKey: config.privateKey,
+        }),
+        authorize({
+          requiredPermissions: ['delete:user'],
+        }),
         (
           req: express.Request<{}, {}, IDeleteUsersReqBody>,
           res: express.Response<ServiceResponse<DeleteUsersSuccessData>>,
         ) => this.userController.deleteUsers(req, res),
-      );
+      ));
 
     /**
      * @openapi
@@ -323,7 +328,9 @@ export class App {
      */
     this.app.delete(
       '/user/:id',
-      verifyToken,
+      verifyJwt({
+        secretOrPublicKey: config.privateKey,
+      }),
       (
         req: express.Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
         res: express.Response<ServiceResponse<DeleteUserSuccessData>>,
