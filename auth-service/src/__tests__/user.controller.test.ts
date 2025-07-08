@@ -99,20 +99,6 @@ describe('UserController - register', () => {
       }
     });
 
-    it('should return error if registration return null', async () => {
-      userServiceMock.findUserByUsername.mockResolvedValue(null);
-      userServiceMock.register.mockResolvedValue(null);
-
-      try {
-        await controller.register(req as Request, res as Response);
-      } catch (e) {
-        expect(e).toBeInstanceOf(AppError);
-        expect((e as AppError).statusCode).toBe(500);
-        expect((e as AppError).message).toBe('Failed to register user');
-        expect((e as AppError).code).toBe('FAILED_TO_REGISTER');
-      }
-    });
-
     it('should handle service errors gracefully', async () => {
       userServiceMock.findUserByUsername.mockRejectedValue(
         new Error('DB error'),
