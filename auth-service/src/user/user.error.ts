@@ -1,12 +1,6 @@
 import { AppError } from '../errors/appError';
 
 export const Errors = {
-  RegistrationFailed: () =>
-    new AppError('Failed to register user', {
-      statusCode: 500,
-      code: 'FAILED_TO_REGISTER',
-    }),
-
   DeletionFailed: () =>
     new AppError('Failed to delete user', {
       statusCode: 500,

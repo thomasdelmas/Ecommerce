@@ -33,9 +33,6 @@ class UserController implements IUserController {
     }
 
     const createdUser = await this.userService.register(username, password);
-    if (!createdUser) {
-      throw Errors.RegistrationFailed();
-    }
 
     res.status(201).json({
       success: true,

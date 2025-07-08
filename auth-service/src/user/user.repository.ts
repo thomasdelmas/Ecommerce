@@ -14,7 +14,7 @@ class UserRepository implements IUserRepository {
 
   createUsers = async (users: IUserCreation[]) => {
     const newDocs = await this.db.create(users);
-    return newDocs.map((doc) => this.toIUserSecure(doc));
+    return newDocs.map((doc: HydratedDocument<IUserSchema>) => this.toIUserSecure(doc));
   };
 
   getUserByUsername = async (username: string) => {
@@ -24,7 +24,7 @@ class UserRepository implements IUserRepository {
 
   getUsersById = async (ids: string[]) => {
     const docs = await this.db.find({ _id: { $in: ids } });
-    return docs.map((doc) => this.toIUser(doc));
+    return docs.map((doc: HydratedDocument<IUserSchema>) => this.toIUser(doc));
   };
 
   getUserById = async (id: string) => {

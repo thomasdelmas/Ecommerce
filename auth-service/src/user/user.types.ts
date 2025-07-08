@@ -37,7 +37,7 @@ export type IUserRepository = {
 };
 
 export type IUserService = {
-  register: (username: string, password: string) => Promise<IUserSecure | null>;
+  register: (username: string, password: string) => Promise<IUserSecure>;
   login: (username: string, password: string) => Promise<string | null>;
   findUserByUsername: (username: string) => Promise<IUser | null>;
   findUserById: (id: string) => Promise<IUser | null>;
