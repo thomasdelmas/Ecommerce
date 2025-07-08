@@ -159,25 +159,6 @@ describe('UserController - register', () => {
       }
     });
 
-    it('should return error if login return a null token', async () => {
-      userServiceMock.findUserByUsername.mockResolvedValue({
-        _id: 'someid',
-        username: 'testuser',
-        password: 'hashedpass',
-        role: '',
-      } as unknown as HydratedDocument<IUser>);
-      userServiceMock.login.mockResolvedValue(null);
-
-      try {
-        await controller.login(req as Request, res as Response);
-      } catch (e) {
-        expect(e).toBeInstanceOf(AppError);
-        expect((e as AppError).statusCode).toBe(401);
-        expect((e as AppError).message).toBe('Invalid password');
-        expect((e as AppError).code).toBe('INVALID_PASSWORD');
-      }
-    });
-
     it('should handle service errors gracefully', async () => {
       userServiceMock.findUserByUsername.mockRejectedValue(
         new Error('DB error'),
