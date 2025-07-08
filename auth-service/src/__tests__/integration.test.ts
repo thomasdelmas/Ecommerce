@@ -104,7 +104,8 @@ describe('AuthService - Integration tests', () => {
       });
 
       expect(res.status).toBe(400);
-      expect(res.body.errors).toBeDefined();
+      expect(res.body.error.message).toBe('Validation failed');
+      expect(res.body.error.meta.validationErrors.length).toBe(1);
     });
   });
 
