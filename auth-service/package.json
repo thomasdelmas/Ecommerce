@@ -8,8 +8,8 @@
     "build": "tsc",
     "dev": "nodemon",
     "start": "tsc && node dist/index.js",
-    "test": "cross-env NODE_ENV=test jest --silent",
-    "coverage": "cross-env NODE_ENV=test jest --silent --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules' jest --silent",
+    "coverage": "cross-env NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules' jest --silent --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
     "lint": "eslint . --ext .ts --fix",
     "format": "prettier --write ."
   },

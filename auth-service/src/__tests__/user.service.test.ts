@@ -55,8 +55,10 @@ describe('UserService', () => {
 
   describe('register', () => {
     it('should hash password and call createUsers on repository', async () => {
-      (bcrypt.hashSync as jest.Mock).mockReturnValue('hashed_password');
-      (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+      const mockHashSync = jest.fn().mockReturnValue('hashed_password');
+      (bcrypt.hashSync as jest.Mock) = mockHashSync;
+      const mockCompareSync = jest.fn().mockReturnValue(true);
+      (bcrypt.compareSync as jest.Mock) = mockCompareSync;
 
       let capturedHashedPassword: string | undefined;
 
@@ -115,7 +117,8 @@ describe('UserService', () => {
         'read:user',
         'write:user',
       ]);
-      (jwt.sign as jest.Mock).mockReturnValue('fake_jwt_token');
+      const mockSign = jest.fn().mockReturnValue('fake_jwt_token');
+      (jwt.sign as jest.Mock) = mockSign;
 
       const token = await service.login('test_user', 'password123');
 

@@ -12,6 +12,7 @@ import { HydratedDocument } from 'mongoose';
 import type { IUser, IUserService } from '../user/user.types';
 import type { IProfile } from '../types/profile.types';
 import {
+  GetProfileRequest,
   IDeleteUserParams,
   IDeleteUserReqBody,
   IDeleteUsersReqBody,
@@ -206,11 +207,17 @@ describe('UserController - register', () => {
   });
 
   describe('getProfile', () => {
+    type MockRequest = Partial<Request> & { payload: { id: string } };
     let id: string;
+    let reqProfile: MockRequest;
 
     beforeAll(() => {
       id = 'ffffffffffffffffffffffff';
-      req = { body: { payload: { id: id } } };
+      reqProfile = {
+        payload: {
+          id: id,
+        },
+      };
     });
 
     it('should get the profile a user succesfully', async () => {
@@ -222,7 +229,10 @@ describe('UserController - register', () => {
 
       userServiceMock.getProfile.mockResolvedValue(mockedProfile);
 
-      await controller.getProfile(req as Request, res as Response);
+      await controller.getProfile(
+        reqProfile as Request<{}, {}, GetProfileRequest>,
+        res as Response,
+      );
 
       expect(userServiceMock.getProfile).toHaveBeenCalledWith(id);
       expect(res.json).toHaveBeenCalledWith({
@@ -234,7 +244,10 @@ describe('UserController - register', () => {
     it('should return error if getProfile return a null profile', async () => {
       userServiceMock.getProfile.mockResolvedValue(null);
       try {
-        await controller.getProfile(req as Request, res as Response);
+        await controller.getProfile(
+          reqProfile as Request<{}, {}, GetProfileRequest>,
+          res as Response,
+        );
       } catch (e) {
         expect(e).toBeInstanceOf(AppError);
         expect((e as AppError).statusCode).toBe(404);
@@ -246,7 +259,10 @@ describe('UserController - register', () => {
     it('should handle service errors gracefully', async () => {
       userServiceMock.getProfile.mockRejectedValue(new Error('DB error'));
       try {
-        await controller.getProfile(req as Request, res as Response);
+        await controller.getProfile(
+          reqProfile as Request<{}, {}, GetProfileRequest>,
+          res as Response,
+        );
       } catch (e) {
         expect(e).toBeInstanceOf(Error);
         expect((e as Error).message).toBe('DB error');
@@ -255,14 +271,18 @@ describe('UserController - register', () => {
   });
 
   describe('deleteUser', () => {
+    type MockRequest = Partial<
+      Request<IDeleteUserParams, {}, IDeleteUserReqBody>
+    > & { payload: { id: string } };
     let id: string;
+    let reqProfile: MockRequest;
 
     beforeAll(() => {
       id = 'ffffffffffffffffffffffff';
     });
 
     it('should delete a user succesfully', async () => {
-      req = { body: { payload: { id: id } }, params: { id: id } };
+      reqProfile = { payload: { id: id }, params: { id: id } };
 
       userServiceMock.findUserById.mockResolvedValue({
         id: id,
@@ -273,7 +293,7 @@ describe('UserController - register', () => {
       userServiceMock.deleteUser.mockResolvedValue(id);
 
       await controller.deleteUser(
-        req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+        reqProfile as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
         res as Response,
       );
 
@@ -286,10 +306,11 @@ describe('UserController - register', () => {
     });
 
     it('should return Forbidden error if IDs mismatch', async () => {
-      req = { body: { payload: { id: id } }, params: { id: 'differentId' } };
+      reqProfile = { payload: { id: id }, params: { id: 'differentId' } };
+
       try {
         await controller.deleteUser(
-          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          reqProfile as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
           res as Response,
         );
       } catch (e) {
@@ -301,12 +322,12 @@ describe('UserController - register', () => {
     });
 
     it('should return error if could not find user in db', async () => {
-      req = { body: { payload: { id: id } }, params: { id: id } };
+      reqProfile = { payload: { id: id }, params: { id: id } };
 
       userServiceMock.findUserById.mockResolvedValue(null);
       try {
         await controller.deleteUser(
-          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          reqProfile as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
           res as Response,
         );
       } catch (e) {
@@ -318,7 +339,7 @@ describe('UserController - register', () => {
     });
 
     it('should return error if could not delete user', async () => {
-      req = { body: { payload: { id: id } }, params: { id: id } };
+      reqProfile = { payload: { id: id }, params: { id: id } };
 
       userServiceMock.findUserById.mockResolvedValue({
         id: id,
@@ -329,7 +350,7 @@ describe('UserController - register', () => {
       userServiceMock.deleteUser.mockResolvedValue(null);
       try {
         await controller.deleteUser(
-          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          reqProfile as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
           res as Response,
         );
       } catch (e) {
@@ -341,7 +362,7 @@ describe('UserController - register', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      req = { body: { payload: { id: id } }, params: { id: id } };
+      reqProfile = { payload: { id: id }, params: { id: id } };
 
       userServiceMock.findUserById.mockResolvedValue({
         id: id,
@@ -352,7 +373,7 @@ describe('UserController - register', () => {
       userServiceMock.deleteUser.mockRejectedValue(new Error('DB error'));
       try {
         await controller.deleteUser(
-          req as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
+          reqProfile as Request<IDeleteUserParams, {}, IDeleteUserReqBody>,
           res as Response,
         );
       } catch (e) {

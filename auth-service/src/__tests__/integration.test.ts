@@ -2,7 +2,8 @@ import { describe, expect, beforeAll, it, afterAll } from '@jest/globals';
 import request from 'supertest';
 import { App } from '../app';
 import config from '../config/validatedConfig';
-import { verify, sign } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+const { verify, sign } = jwt;
 import { models } from '../models/init';
 
 describe('AuthService - Integration tests', () => {
@@ -176,7 +177,7 @@ describe('AuthService - Integration tests', () => {
       const res = await request(appInstance.app).get('/profile').send();
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('No JWT');
+      expect(res.body.error.message).toBe('No JWT provided');
     });
 
     it('should fail if invalid jwt', async () => {
@@ -186,7 +187,7 @@ describe('AuthService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('Invalid token');
+      expect(res.body.error.message).toBe('Invalid token');
     });
 
     it('should fail with jwt not active', async () => {
@@ -205,7 +206,7 @@ describe('AuthService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('Token not active');
+      expect(res.body.error.message).toBe('Token not active yet');
     });
 
     it('should fail with jwt expired', async () => {
@@ -224,7 +225,7 @@ describe('AuthService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('Token expired');
+      expect(res.body.error.message).toBe('Token expired');
     });
   });
 
@@ -251,7 +252,7 @@ describe('AuthService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('Invalid token');
+      expect(res.body.error.message).toBe('Invalid token');
     });
 
     it('should fail if jwt id and param id mismatch', async () => {
@@ -325,7 +326,7 @@ describe('AuthService - Integration tests', () => {
         .send(req);
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('Invalid token');
+      expect(res.body.error.message).toBe('Invalid token');
     });
 
     it('should fail if jwt permissions does not match', async () => {
@@ -338,7 +339,7 @@ describe('AuthService - Integration tests', () => {
         .send(req);
 
       expect(res.status).toBe(403);
-      expect(res.body.message).toBe('Forbidden');
+      expect(res.body.error.message).toBe('Forbidden');
     });
   });
 });
