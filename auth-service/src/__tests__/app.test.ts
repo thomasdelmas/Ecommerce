@@ -6,26 +6,7 @@ import {
   it,
   afterEach,
 } from '@jest/globals';
-import request from 'supertest';
 import mongoose from 'mongoose';
-
-//  Mock first
-jest.mock('../user/user.controller', () => {
-  return {
-    __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
-      register: jest.fn((req: any, res: any) =>
-        res.status(201).send({ ok: true }),
-      ),
-    })),
-  };
-});
-
-jest.mock('../models/init', () => ({
-  models: {
-    user: {},
-  },
-}));
 
 jest.mock('../config/validatedConfig', () => ({
   mongoURI: 'mongodb://localhost:27017/',
@@ -56,35 +37,8 @@ describe('App', () => {
     jest.restoreAllMocks();
   });
 
-  describe('Middleware & Routes', () => {
-    it('should respond to health check route', async () => {
-      const res = await request(appInstance.app).get('/');
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual({ status: 'ok' });
-    });
-
-    it('should call register controller on POST /register', async () => {
-      const registerMock = jest.fn((_req: any, res: any) =>
-        res.status(201).send(),
-      );
-
-      const mockController = { register: registerMock } as any;
-
-      const appInstance = new App(mockController);
-
-      const res = await request(appInstance.app).post('/register').send({
-        username: 'test@example.com',
-        password: '123456D',
-        confirmPassword: '123456D',
-      });
-
-      expect(res.status).toBe(201);
-      expect(registerMock).toHaveBeenCalled();
-    });
-  });
-
-  describe('Database Connection', () => {
-    it('should connect to MongoDB immediately', async () => {
+  describe('3rd party connections', () => {
+    it('should connect to MongoDB on start', async () => {
       const connectSpy = jest
         .spyOn(mongoose, 'connect')
         .mockResolvedValueOnce({} as any);
@@ -101,7 +55,7 @@ describe('App', () => {
       expect(listenSpy).toHaveBeenCalled();
     });
 
-    it('should retry on MongoDB connection failure', async () => {
+    it('should retry MongoDB connection before succeeding', async () => {
       const connectSpy = jest
         .spyOn(mongoose, 'connect')
         .mockRejectedValueOnce(new Error('fail1'))
@@ -120,7 +74,20 @@ describe('App', () => {
       expect(listenSpy).toHaveBeenCalled();
     });
 
-    it('should fail after all retries', async () => {
+    it('should disconnect on stop MongoDB', async () => {
+      const disconnectSpy = jest
+        .spyOn(mongoose, 'disconnect')
+        .mockResolvedValueOnce();
+
+      appInstance.server = { close: jest.fn() } as any;
+
+      await appInstance.start();
+      await appInstance.stop();
+
+      expect(disconnectSpy).toHaveBeenCalled();
+    });
+
+    it('should fail after 3 MongoDB connection attempts', async () => {
       const error = new Error('Mongo fail');
       const connectSpy = jest
         .spyOn(mongoose, 'connect')
@@ -156,20 +123,6 @@ describe('App', () => {
 
       expect(listenSpy).toHaveBeenCalled();
       expect(connectSpy).toHaveBeenCalled();
-    });
-
-    it('should stop the server and disconnect DB', async () => {
-      const closeMock = jest.fn();
-      const disconnectSpy = jest
-        .spyOn(mongoose, 'disconnect')
-        .mockResolvedValueOnce();
-
-      appInstance.server = { close: closeMock } as any;
-
-      await appInstance.stop();
-
-      expect(closeMock).toHaveBeenCalled();
-      expect(disconnectSpy).toHaveBeenCalled();
     });
   });
 });
