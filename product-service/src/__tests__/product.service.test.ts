@@ -63,11 +63,29 @@ describe('ProductService', () => {
           stock: 10,
         },
       ];
+      const createdProduct: IProduct[] = [
+        {
+          id: 'ffffffffffffffffffffffff',
+          name: 'T-shirt blue',
+          category: 'T-shirt',
+          price: 33.5,
+          stock: 5,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+        {
+          id: 'gggggggggggggggggggggggg',
+          name: 'T-shirt green',
+          category: 'T-shirt',
+          price: 34.0,
+          stock: 10,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+      ];
 
       productDBRepository.getProductByName.mockResolvedValue(null);
-      productDBRepository.createProducts.mockImplementation(
-        async (products) => products,
-      );
+      productDBRepository.createProducts.mockResolvedValue(createdProduct);
 
       const result = await productService.createProducts(inputs);
 
@@ -99,6 +117,7 @@ describe('ProductService', () => {
 
       productDBRepository.createProducts.mockResolvedValue([
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt green',
           category: 'T-shirt',
@@ -161,6 +180,7 @@ describe('ProductService', () => {
       productDBRepository.getProductByName.mockResolvedValue(null);
       productDBRepository.createProducts.mockResolvedValue([
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',
@@ -185,6 +205,7 @@ describe('ProductService', () => {
   describe('getProductWithId', () => {
     it('should return product with given id', async () => {
       const product: IProduct = {
+        id: 'ffffffffffffffffffffffff',
         createdAt: Date.now(),
         name: 'T-shirt blue',
         category: 'T-shirt',
@@ -222,6 +243,7 @@ describe('ProductService', () => {
     it('should return products on cache hit', async () => {
       const products: IProduct[] = [
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',
@@ -249,6 +271,7 @@ describe('ProductService', () => {
     it('should return products from db and store in cache', async () => {
       const products: IProduct[] = [
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',

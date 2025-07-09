@@ -36,6 +36,7 @@ describe('ProductCacheRepository', () => {
     it('should call client.get() with product key and return result', async () => {
       const products: IProduct[] = [
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',
@@ -44,6 +45,7 @@ describe('ProductCacheRepository', () => {
           stock: 5,
         },
         {
+          id: 'gggggggggggggggggggggggg',
           createdAt: Date.now(),
           name: 'T-shirt green',
           category: 'T-shirt',
@@ -85,6 +87,7 @@ describe('ProductCacheRepository', () => {
     it('should call client.set() with products as value and key', async () => {
       const products: IProduct[] = [
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',
@@ -93,6 +96,7 @@ describe('ProductCacheRepository', () => {
           stock: 5,
         },
         {
+          id: 'gggggggggggggggggggggggg',
           createdAt: Date.now(),
           name: 'T-shirt green',
           category: 'T-shirt',
@@ -116,6 +120,7 @@ describe('ProductCacheRepository', () => {
     it('should return null if client.set() returns null', async () => {
       const products: IProduct[] = [
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',
@@ -124,6 +129,7 @@ describe('ProductCacheRepository', () => {
           stock: 5,
         },
         {
+          id: 'gggggggggggggggggggggggg',
           createdAt: Date.now(),
           name: 'T-shirt green',
           category: 'T-shirt',
@@ -147,6 +153,7 @@ describe('ProductCacheRepository', () => {
     it('should propagate errors if client.set rejects', async () => {
       const products: IProduct[] = [
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',
@@ -155,6 +162,7 @@ describe('ProductCacheRepository', () => {
           stock: 5,
         },
         {
+          id: 'gggggggggggggggggggggggg',
           createdAt: Date.now(),
           name: 'T-shirt green',
           category: 'T-shirt',

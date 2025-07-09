@@ -90,18 +90,42 @@ describe('ProductService - Integration tests', () => {
       },
     ];
 
-    await models.product.create(products);
+    try {
+      await models.product.create(products);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.warn(
+          'Mongoose failed to connect skip product creation:',
+          err.message,
+        );
+      }
+    }
   });
 
   afterAll(async () => {
-    const cacheConfig = loadCacheConfig();
-    const cacheClient = new CacheClient(cacheConfig);
-    await cacheClient.connect();
-    const cache = cacheClient.get();
-    await cache.flushAll();
-    cache.destroy();
+    try {
+      const cacheConfig = loadCacheConfig();
+      const cacheClient = new CacheClient(cacheConfig);
+      await cacheClient.connect();
+      const cache = cacheClient.get();
+      await cache.flushAll();
+      cache.destroy();
+    } catch (err) {
+      if (err instanceof Error) {
+        console.warn(
+          'Redis cleanup skipped (Redis not available):',
+          err.message,
+        );
+      }
+    }
 
-    await models.product.deleteMany();
+    try {
+      await models.product.deleteMany();
+    } catch (err) {
+      if (err instanceof Error) {
+        console.warn('Mongoose failed to connect skip deletion:', err.message);
+      }
+    }
 
     await appInstance.stop();
   });

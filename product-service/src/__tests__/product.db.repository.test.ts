@@ -8,9 +8,9 @@ import {
   beforeAll,
 } from '@jest/globals';
 import ProductRepository from '../product/product.db.repository';
-import type { IProduct, IProductModel } from '../product/product.types';
-import mongoose, { HydratedDocument } from 'mongoose';
-import ProductSchema from '../product/product.schema';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
+import ProductSchema, { IProductSchema } from '../product/product.schema';
+import { IProductModel } from '../types/db.types';
 const mockingoose = (await import('mockingoose')).default;
 
 describe('ProductRepository', () => {
@@ -27,18 +27,17 @@ describe('ProductRepository', () => {
   });
 
   beforeEach(() => {
-    productModel = mongoose.model('product', ProductSchema);
-    repository = new ProductRepository(productModel);
-
     dbMock = {
       create: jest.fn(),
       findOne: jest.fn(),
     } as unknown as jest.Mocked<IProductModel>;
+
+    repository = new ProductRepository(dbMock);
   });
 
   describe('createProducts', () => {
     it('should call db.create with product data and return result', async () => {
-      const products: IProduct[] = [
+      const products = [
         {
           createdAt: Date.now(),
           name: 'T-shirt blue',
@@ -56,18 +55,46 @@ describe('ProductRepository', () => {
           stock: 10,
         },
       ];
-      productModel = mongoose.model('product', ProductSchema);
-      repository = new ProductRepository(dbMock);
-      const createdProducts = products.map((prod) => ({
-        ...prod,
-        _id: 'ffffffffffffffffffffffff',
-      })) as unknown as HydratedDocument<IProduct>[];
+      const expectedProducts = [
+        {
+          id: '6862b2c2f4b88483321b9fdb',
+          createdAt: Date.now(),
+          name: 'T-shirt blue',
+          category: 'T-shirt',
+          price: 33.5,
+          currency: 'euro',
+          stock: 5,
+        },
+        {
+          id: '6862b2c2f4b88483321b9fda',
+          createdAt: Date.now(),
+          name: 'T-shirt green',
+          category: 'T-shirt',
+          price: 34.0,
+          currency: 'euro',
+          stock: 10,
+        },
+      ];
+
+      const createdProducts = [
+        {
+          _id: new Types.ObjectId('6862b2c2f4b88483321b9fdb'),
+          ...products[0],
+          toObject: jest.fn().mockReturnValue(products[0]),
+        },
+        {
+          _id: new Types.ObjectId('6862b2c2f4b88483321b9fda'),
+          ...products[1],
+          toObject: jest.fn().mockReturnValue(products[1]),
+        },
+      ] as unknown as HydratedDocument<IProductSchema>[];
+
       dbMock.create.mockResolvedValue(createdProducts);
 
       const result = await repository.createProducts(products);
 
       expect(dbMock.create).toHaveBeenCalledWith(products);
-      expect(result).toBe(createdProducts);
+      expect(result).toStrictEqual(expectedProducts);
     });
 
     it('should propagate errors if db.create throws', async () => {

@@ -62,6 +62,7 @@ describe('ProductController - createProducts', () => {
       const mockProducts = {
         createdProducts: [
           {
+            id: 'ffffffffffffffffffffffff',
             createdAt: Date.now(),
             name: 'T-shirt blue',
             category: 'T-shirt',
@@ -70,6 +71,7 @@ describe('ProductController - createProducts', () => {
             stock: 5,
           },
           {
+            id: 'gggggggggggggggggggggggg',
             createdAt: Date.now(),
             name: 'T-shirt vert',
             category: 'T-shirt',
@@ -141,6 +143,7 @@ describe('ProductController - createProducts', () => {
       const mockProducts = {
         createdProducts: [
           {
+            id: 'ffffffffffffffffffffffff',
             createdAt: Date.now(),
             name: 'T-shirt blue',
             category: 'T-shirt',
@@ -193,6 +196,7 @@ describe('ProductController - createProducts', () => {
 
     it('should return a product successfully', async () => {
       const mockProduct = {
+        id: 'ffffffffffffffffffffffff',
         createdAt: Date.now(),
         name: 'T-shirt blue',
         category: 'T-shirt',
@@ -267,6 +271,7 @@ describe('ProductController - createProducts', () => {
     it('should return a product successfully', async () => {
       const mockProduct = [
         {
+          id: 'ffffffffffffffffffffffff',
           createdAt: Date.now(),
           name: 'T-shirt blue',
           category: 'T-shirt',
