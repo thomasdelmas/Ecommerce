@@ -39,18 +39,12 @@ import { authorize, verifyJwt } from '@thomasdelmas/jwt-middlewares';
 
 export class App {
   app: express.Application;
-  userController: UserController;
+  private _userController: UserController | null = null;
   server: http.Server | null = null;
 
-  constructor(userController?: UserController) {
+  constructor() {
     this.app = express();
     this.configureMiddleware();
-    const userRepository = new UserRepository(models.user);
-    const roleRepository = new RoleRepository(models.role);
-    const roleService = new RoleService(roleRepository);
-    const userService = new UserService(userRepository, roleService);
-    this.userController = userController ?? new UserController(userService);
-    this.configureRoutes();
   }
 
   configureMiddleware = () => {
@@ -345,6 +339,11 @@ export class App {
     this.app.use(errorHandler);
   };
 
+  get userController() {
+    if (!this._userController) throw new Error('Controller not initialized');
+    return this._userController;
+  }
+
   connectDBWithRetry = async (
     uri: string,
     dbName: string,
@@ -375,6 +374,14 @@ export class App {
 
   start = async () => {
     try {
+      const userRepository = new UserRepository(models.user);
+      const roleRepository = new RoleRepository(models.role);
+      const roleService = new RoleService(roleRepository);
+      const userService = new UserService(userRepository, roleService);
+
+      this._userController = new UserController(userService);
+      this.configureRoutes();
+
       this.server = this.app.listen(config.port, () =>
         console.log(`Server started on port ${config.port}`),
       );
