@@ -25,14 +25,26 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Create .npmrc with GitHub token
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GHCR_PAT }}" > $HOME/.npmrc
+          echo "npmrc=$(cat $HOME/.npmrc)" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm install
 
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:${{ github.sha }} .
+      - name: Build Product Docker Image with BuildKit Secrets
+        uses: docker/build-push-action@v6
+        with:
+          context: ./product-service
+          file: ./product-service/Dockerfile
+          push: false
+          tags: ghcr.io/thomasdelmas/ecommerce/auth-service:${{ github.sha }}
+          secrets: |
+            npmrc=${{ env.npmrc }}
 
   test:
     name: Test
@@ -50,6 +62,11 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Create .npmrc with GitHub token
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GHCR_PAT }}" > $HOME/.npmrc
+          echo "npmrc=$(cat $HOME/.npmrc)" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm install
 
@@ -57,6 +74,16 @@ jobs:
         run: |
           echo Commit: ${{ github.sha }}
           echo Branch: ${{ github.ref }}
+
+      - name: Build Product Docker Image with BuildKit Secrets
+        uses: docker/build-push-action@v6
+        with:
+          context: ./product-service
+          file: ./product-service/Dockerfile
+          push: false
+          tags: ghcr.io/thomasdelmas/ecommerce/auth-service:${{ github.sha }}
+          secrets: |
+            npmrc=${{ env.npmrc }}
 
       - name: Run tests with Docker Compose
         run: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --remove-orphans
@@ -75,8 +102,20 @@ jobs:
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:${{ github.sha }} .
+      - name: Create .npmrc with GitHub token
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GHCR_PAT }}" > $HOME/.npmrc
+          echo "npmrc=$(cat $HOME/.npmrc)" >> $GITHUB_ENV
+
+      - name: Build Product Docker Image with BuildKit Secrets
+        uses: docker/build-push-action@v6
+        with:
+          context: ./product-service
+          file: ./product-service/Dockerfile
+          push: false
+          tags: ghcr.io/thomasdelmas/ecommerce/auth-service:${{ github.sha }}
+          secrets: |
+            npmrc=${{ env.npmrc }}
 
       - name: Push Docker image
         run: docker push $IMAGE_NAME:${{ github.sha }}
