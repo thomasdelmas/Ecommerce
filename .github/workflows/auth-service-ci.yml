@@ -36,11 +36,11 @@ jobs:
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build Product Docker Image with BuildKit Secrets
+      - name: Build Auth Docker Image with BuildKit Secrets
         uses: docker/build-push-action@v6
         with:
-          context: ./product-service
-          file: ./product-service/Dockerfile
+          context: ./auth-service
+          file: ./auth-service/Dockerfile
           push: false
           tags: ghcr.io/thomasdelmas/ecommerce/auth-service:${{ github.sha }}
           secrets: |
@@ -75,11 +75,11 @@ jobs:
           echo Commit: ${{ github.sha }}
           echo Branch: ${{ github.ref }}
 
-      - name: Build Product Docker Image with BuildKit Secrets
+      - name: Build Auth Docker Image with BuildKit Secrets
         uses: docker/build-push-action@v6
         with:
-          context: ./product-service
-          file: ./product-service/Dockerfile
+          context: ./auth-service
+          file: ./auth-service/Dockerfile
           push: false
           tags: ghcr.io/thomasdelmas/ecommerce/auth-service:${{ github.sha }}
           secrets: |
@@ -107,11 +107,11 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GHCR_PAT }}" > $HOME/.npmrc
           echo "npmrc=$(cat $HOME/.npmrc)" >> $GITHUB_ENV
 
-      - name: Build Product Docker Image with BuildKit Secrets
+      - name: Build Auth Docker Image with BuildKit Secrets
         uses: docker/build-push-action@v6
         with:
-          context: ./product-service
-          file: ./product-service/Dockerfile
+          context: ./auth-service
+          file: ./auth-service/Dockerfile
           push: false
           tags: ghcr.io/thomasdelmas/ecommerce/auth-service:${{ github.sha }}
           secrets: |
