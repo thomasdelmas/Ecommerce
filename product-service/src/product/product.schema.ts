@@ -1,7 +1,15 @@
 import { Schema } from 'mongoose';
-import { IProduct } from './product.types';
 
-const ProductSchema = new Schema<IProduct>({
+export interface IProductSchema {
+  createdAt: number;
+  name: string;
+  category: string;
+  price: number;
+  currency: string;
+  stock: number;
+}
+
+const ProductSchema = new Schema<IProductSchema>({
   createdAt: {
     type: Number,
     required: true,

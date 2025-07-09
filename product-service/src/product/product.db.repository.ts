@@ -1,25 +1,31 @@
-import { FilterQuery } from 'mongoose';
+import { FilterQuery, HydratedDocument } from 'mongoose';
 import type {
-  IProduct,
   IProductFilter,
-  IProductModel,
   IProductDBRepository,
   RangeFilter,
+  IProductCreation,
 } from './product.types';
+import { IProductModel } from '../types/db.types';
+import { IProductSchema } from './product.schema';
 
 class ProductDBRepository implements IProductDBRepository {
   constructor(private db: IProductModel) {}
 
-  async createProducts(products: IProduct[]) {
-    return await this.db.create(products);
+  async createProducts(products: IProductCreation[]) {
+    const newDocs = await this.db.create(products);
+    return newDocs.map((doc: HydratedDocument<IProductSchema>) =>
+      this.toIProduct(doc),
+    );
   }
 
-  async getProductByName(name: IProduct['name']) {
-    return await this.db.findOne({ name }).exec();
+  async getProductByName(name: string) {
+    const product = await this.db.findOne({ name }).exec();
+    return product ? this.toIProduct(product) : null;
   }
 
   async getProductById(id: string) {
-    return await this.db.findOne({ _id: id }).exec();
+    const product = await this.db.findOne({ _id: id }).exec();
+    return product ? this.toIProduct(product) : null;
   }
 
   applyRangeFilter(field: string, filter: RangeFilter<number>, query: any) {
@@ -34,7 +40,7 @@ class ProductDBRepository implements IProductDBRepository {
     page: number,
     productPerPage: number,
   ) {
-    const query: FilterQuery<IProduct> = {};
+    const query: FilterQuery<IProductSchema> = {};
 
     if (filter.createdAt) {
       this.applyRangeFilter('createdAt', filter.createdAt, query);
@@ -65,14 +71,26 @@ class ProductDBRepository implements IProductDBRepository {
 
     const skip = (page - 1) * productPerPage;
 
-    const products = await this.db
+    const foundDocs = await this.db
       .find(query)
       .skip(skip)
       .limit(productPerPage)
       .exec();
 
+    const products = foundDocs.map((doc: HydratedDocument<IProductSchema>) =>
+      this.toIProduct(doc),
+    );
+
     return products;
   }
+
+  private toIProduct = (doc: HydratedDocument<IProductSchema>) => {
+    const product = doc.toObject();
+    return {
+      ...product,
+      id: doc._id.toString(),
+    };
+  };
 }
 
 export default ProductDBRepository;

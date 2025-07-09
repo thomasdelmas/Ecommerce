@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 
 export interface IProduct {
+  id: string;
   createdAt: number;
   name: string;
   category: string;
@@ -33,11 +33,11 @@ export interface IProductFilter {
   stock?: RangeFilter<number>;
 }
 
-export type IProductModel = mongoose.Model<IProduct>;
+export type IProductCreation = Omit<IProduct, 'id'>;
 
 export type IProductDBRepository = {
-  createProducts: (products: IProduct[]) => Promise<IProduct[]>;
-  getProductByName: (name: IProduct['name']) => Promise<IProduct | null>;
+  createProducts: (products: IProductCreation[]) => Promise<IProduct[]>;
+  getProductByName: (name: string) => Promise<IProduct | null>;
   getProductById: (id: string) => Promise<IProduct | null>;
   getProductsWithFilter: (
     filter: IProductFilter,
@@ -53,7 +53,7 @@ export type IProductCacheRepository = {
 
 type CreateProductsPayloadOmit = 'createdAt' | 'currency';
 export interface CreateProductsPayload
-  extends Omit<IProduct, CreateProductsPayloadOmit> {}
+  extends Omit<IProductCreation, CreateProductsPayloadOmit> {}
 
 export type IProductService = {
   createProducts: (inputs: CreateProductsPayload[]) => Promise<{
