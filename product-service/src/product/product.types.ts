@@ -1,4 +1,8 @@
 import { Request, Response } from 'express';
+import {
+  CreateProductsRequestBody,
+  GetProductWithIdParams,
+} from '../types/request.types';
 
 export interface IProduct {
   id: string;
@@ -35,6 +39,10 @@ export interface IProductFilter {
 
 export type IProductCreation = Omit<IProduct, 'id'>;
 
+type CreateProductsPayloadOmit = 'createdAt' | 'currency';
+export interface CreateProductsPayload
+  extends Omit<IProductCreation, CreateProductsPayloadOmit> {}
+
 export type IProductDBRepository = {
   createProducts: (products: IProductCreation[]) => Promise<IProduct[]>;
   getProductByName: (name: string) => Promise<IProduct | null>;
@@ -51,10 +59,6 @@ export type IProductCacheRepository = {
   createEntry: (products: IProduct[], key: string) => Promise<string | null>;
 };
 
-type CreateProductsPayloadOmit = 'createdAt' | 'currency';
-export interface CreateProductsPayload
-  extends Omit<IProductCreation, CreateProductsPayloadOmit> {}
-
 export type IProductService = {
   createProducts: (inputs: CreateProductsPayload[]) => Promise<{
     createdProducts: IProduct[] | null;
@@ -68,36 +72,13 @@ export type IProductService = {
   ) => Promise<IProduct[]>;
 };
 
-export type ICreateProductsReqBody = {
-  products: CreateProductsPayload[];
-};
-
-export type IGetProductWithIdParams = {
-  id: string;
-};
-
-export interface IGetProductsWithFilterQuery {
-  category?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  page?: number;
-  limit?: number;
-  searchTerm?: string;
-  currency?: string;
-}
-
-export interface IGetProductsWithFilteredQuery
-  extends IGetProductsWithFilterQuery {
-  filteredQuery?: IProductFilter;
-}
-
 export type IProductController = {
   createProducts: (
-    req: Request<{}, {}, ICreateProductsReqBody>,
+    req: Request<{}, {}, CreateProductsRequestBody>,
     res: Response,
   ) => Promise<any>;
   getProductWithId: (
-    req: Request<IGetProductWithIdParams, {}, {}>,
+    req: Request<GetProductWithIdParams, {}, {}>,
     res: Response,
   ) => Promise<any>;
 };
