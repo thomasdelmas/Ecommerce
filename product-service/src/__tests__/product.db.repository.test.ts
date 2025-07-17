@@ -37,9 +37,12 @@ describe('ProductRepository', () => {
 
   describe('createProducts', () => {
     it('should call db.create with product data and return result', async () => {
+      const createdAt1 = Date.now();
+      const createdAt2 = Date.now();
+
       const products = [
         {
-          createdAt: Date.now(),
+          createdAt: createdAt1,
           name: 'T-shirt blue',
           category: 'T-shirt',
           price: 33.5,
@@ -47,7 +50,7 @@ describe('ProductRepository', () => {
           stock: 5,
         },
         {
-          createdAt: Date.now(),
+          createdAt: createdAt2,
           name: 'T-shirt green',
           category: 'T-shirt',
           price: 34.0,
@@ -58,7 +61,7 @@ describe('ProductRepository', () => {
       const expectedProducts = [
         {
           id: '6862b2c2f4b88483321b9fdb',
-          createdAt: Date.now(),
+          createdAt: createdAt1,
           name: 'T-shirt blue',
           category: 'T-shirt',
           price: 33.5,
@@ -67,7 +70,7 @@ describe('ProductRepository', () => {
         },
         {
           id: '6862b2c2f4b88483321b9fda',
-          createdAt: Date.now(),
+          createdAt: createdAt2,
           name: 'T-shirt green',
           category: 'T-shirt',
           price: 34.0,

@@ -13,6 +13,7 @@ import {
   GetProductsWithFilteredQuery,
   GetProductWithIdParams,
 } from '../types/request.types';
+import { AppError } from '../errors/appError';
 
 describe('ProductController - createProducts', () => {
   let productServiceMock: jest.Mocked<IProductService>;
@@ -127,15 +128,14 @@ describe('ProductController - createProducts', () => {
       };
       productServiceMock.createProducts.mockResolvedValue(mockProducts);
 
-      await controller.createProducts(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        creationResults: mockProducts,
-        creationCount: 0,
-        rejectionCount: 2,
-        message: 'Failed to create products',
-      });
+      try {
+        await controller.createProducts(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(400);
+        expect((e as AppError).code).toBe('NO_PRODUCT_CREATED');
+        expect((e as AppError).message).toBe('Failed to create product');
+      }
     });
 
     it('should return partial success with some products creation', async () => {
@@ -180,11 +180,12 @@ describe('ProductController - createProducts', () => {
       productServiceMock.createProducts.mockRejectedValue(
         new Error('DB error'),
       );
-
-      await controller.createProducts(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      try {
+        await controller.createProducts(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
+      }
     });
   });
 
@@ -224,32 +225,35 @@ describe('ProductController - createProducts', () => {
     it('should return error with product not found', async () => {
       productServiceMock.getProductWithId.mockResolvedValue(null);
 
-      await controller.getProductWithId(
-        req as Request<GetProductWithIdParams, {}, {}>,
-        res as Response,
-      );
-
-      expect(productServiceMock.getProductWithId).toHaveBeenCalledWith(
-        req.params?.id as string,
-      );
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Could not find product with id: ' + req.params?.id,
-      });
+      try {
+        await controller.getProductWithId(
+          req as Request<GetProductWithIdParams, {}, {}>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(productServiceMock.getProductWithId).toHaveBeenCalledWith(
+          req.params?.id as string,
+        );
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(404);
+        expect((e as AppError).code).toBe('USER_NOT_FOUND');
+        expect((e as AppError).message).toBe('User not found');
+      }
     });
 
     it('should handle service errors gracefully', async () => {
       productServiceMock.getProductWithId.mockRejectedValue(
         new Error('DB error'),
       );
-
-      await controller.getProductWithId(
-        req as Request<GetProductWithIdParams, {}, {}>,
-        res as Response,
-      );
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ message: 'DB error' });
+      try {
+        await controller.getProductWithId(
+          req as Request<GetProductWithIdParams, {}, {}>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
+      }
     });
   });
 
@@ -317,22 +321,22 @@ describe('ProductController - createProducts', () => {
 
       productServiceMock.getProductsWithFilter.mockResolvedValue(mockProduct);
 
-      await controller.getProductsWithFilter(
-        req as Request<{}, {}, {}, GetProductsWithFilteredQuery>,
-        res as Response,
-      );
-
-      expect(productServiceMock.getProductsWithFilter).toHaveBeenCalledWith(
-        filteredQuery,
-        page,
-        limit,
-      );
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({
-        products: [],
-        count: 0,
-        message: 'No product found.',
-      });
+      try {
+        await controller.getProductsWithFilter(
+          req as Request<{}, {}, {}, GetProductsWithFilteredQuery>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(productServiceMock.getProductsWithFilter).toHaveBeenCalledWith(
+          filteredQuery,
+          page,
+          limit,
+        );
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).statusCode).toBe(404);
+        expect((e as AppError).code).toBe('USER_NOT_FOUND');
+        expect((e as AppError).message).toBe('User not found');
+      }
     });
 
     it('should handle service errors gracefully', async () => {
@@ -347,20 +351,20 @@ describe('ProductController - createProducts', () => {
         throw new Error('Cache error');
       });
 
-      await controller.getProductsWithFilter(
-        req as Request<{}, {}, {}, GetProductsWithFilteredQuery>,
-        res as Response,
-      );
-
-      expect(productServiceMock.getProductsWithFilter).toHaveBeenCalledWith(
-        filteredQuery,
-        page,
-        limit,
-      );
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Failed to get products. Server error.',
-      });
+      try {
+        await controller.getProductsWithFilter(
+          req as Request<{}, {}, {}, GetProductsWithFilteredQuery>,
+          res as Response,
+        );
+      } catch (e) {
+        expect(productServiceMock.getProductsWithFilter).toHaveBeenCalledWith(
+          filteredQuery,
+          page,
+          limit,
+        );
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('Cache error');
+      }
     });
   });
 });

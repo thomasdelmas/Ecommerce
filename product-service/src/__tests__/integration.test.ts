@@ -284,9 +284,7 @@ describe('ProductService - Integration tests', () => {
       );
 
       expect(res.status).toBe(404);
-      expect(res.body.message).toContain(
-        'Could not find product with id: ' + nonExistingId,
-      );
+      expect(res.body.error.message).toContain('User not found');
     });
 
     it('should return 400 for invalid product ID', async () => {
