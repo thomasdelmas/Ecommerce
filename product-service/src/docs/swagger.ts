@@ -9,124 +9,124 @@ export const swaggerSpec = swaggerJSDoc({
     },
     components: {
       schemas: {
-				CreateProductsRequest: {
+        CreateProductsRequest: {
           type: 'array',
-					items: {
-						$ref: '#/components/schemas/CreateProductPayload',
-					}
-				},
-				CreatedProductsResponse: {
-					type: 'object',
-					properties: {
-						success: {
-							type: 'boolean',
-							example: true,
-						},
-						data: {
-							type: 'object',
-							properties: {
-								creationResult: {
-									type: 'array',
-									items: {
-										$ref: '#/components/schemas/Product',
-									}
-								},
-								rejectionResult: {
-									type: 'array',
-									items: {
-										type: 'object',
-										properties: {
-											inputs: {
-												$ref: '#/components/schemas/CreateProductPayload',
-											},
-											reason: {
-												type: 'string',
-												exemple: 'Product name already exist',
-											}
-										}
-									}
-								}
-							},
-						},
-					},
-				},
-				Product: {
-					types: 'object',
-					properties: {
-						id: {
-							type: 'string',
-							example: '6862b2c2f4b88483321b9fda',
-						},
-						createdAt: {
-							type: 'string',
-							example: '1751298754950',
-						},
-						name: {
-							type: 'string',
-							example: 'Blue T-shirt',
-						},
-						category: {
-							type: 'string',
-							example: 'T-shirt',
-						},
-						price: {
-							type: 'number',
-							example: '99',
-						},
-						currency: {
-							type: 'string',
-							example: 'euro',
-						},
-						stock: {
-							type: 'number',
-							example: '666',
-						},
-					}
-				},
-				CreateProductPayload: {
-					types: 'object',
-					required: ['name', 'category', 'price', 'stock'],
-					properties: {
-						name: {
-							type: 'string',
-							example: 'Blue T-shirt',
-						},
-						category: {
-							type: 'string',
-							example: 'T-shirt',
-						},
-						price: {
-							type: 'number',
-							example: '99',
-						},
-						stock: {
-							type: 'number',
-							example: '666',
-						},
-					}
-				},
-				NoProductCreatedError: {
-					type: 'object',
-					properties: {
-						success: {
-							type: 'boolean',
-							example: false,
-						},
-						error: {
-							type: 'object',
-							properties: {
-								message: {
-									type: 'string',
-									example: 'Failed to create product',
-								},
-								code: {
-									type: 'string',
-									example: 'PRODUCT_CREATION_FAILED',
-								},
-							},
-						},
-					},
-				},
+          items: {
+            $ref: '#/components/schemas/CreateProductPayload',
+          },
+        },
+        CreatedProductsResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'object',
+              properties: {
+                creationResult: {
+                  type: 'array',
+                  items: {
+                    $ref: '#/components/schemas/Product',
+                  },
+                },
+                rejectionResult: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      inputs: {
+                        $ref: '#/components/schemas/CreateProductPayload',
+                      },
+                      reason: {
+                        type: 'string',
+                        exemple: 'Product name already exist',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        Product: {
+          types: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              example: '6862b2c2f4b88483321b9fda',
+            },
+            createdAt: {
+              type: 'string',
+              example: '1751298754950',
+            },
+            name: {
+              type: 'string',
+              example: 'Blue T-shirt',
+            },
+            category: {
+              type: 'string',
+              example: 'T-shirt',
+            },
+            price: {
+              type: 'number',
+              example: '99',
+            },
+            currency: {
+              type: 'string',
+              example: 'euro',
+            },
+            stock: {
+              type: 'number',
+              example: '666',
+            },
+          },
+        },
+        CreateProductPayload: {
+          types: 'object',
+          required: ['name', 'category', 'price', 'stock'],
+          properties: {
+            name: {
+              type: 'string',
+              example: 'Blue T-shirt',
+            },
+            category: {
+              type: 'string',
+              example: 'T-shirt',
+            },
+            price: {
+              type: 'number',
+              example: '99',
+            },
+            stock: {
+              type: 'number',
+              example: '666',
+            },
+          },
+        },
+        NoProductCreatedError: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false,
+            },
+            error: {
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string',
+                  example: 'Failed to create product',
+                },
+                code: {
+                  type: 'string',
+                  example: 'PRODUCT_CREATION_FAILED',
+                },
+              },
+            },
+          },
+        },
         InternalError: {
           type: 'object',
           properties: {
