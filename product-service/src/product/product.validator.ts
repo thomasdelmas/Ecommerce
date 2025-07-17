@@ -37,8 +37,8 @@ export const getProductValidation: ValidationChain[] = [
   param('id')
     .exists()
     .withMessage('Product id is required')
-    .isLength({ max: 30 })
-    .withMessage('Product id must be maximum 30 characters long'),
+    .matches(/^[0-9a-fA-F]{24}$/)
+    .withMessage('Product id must be 24 characters long and alphanumeric'),
 ];
 
 export const getProductsValidation: ValidationChain[] = [
