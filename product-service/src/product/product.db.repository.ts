@@ -7,6 +7,8 @@ import type {
 } from './product.types';
 import { IProductModel } from '../types/db.types';
 import { IProductSchema } from './product.schema.js';
+import lodash from 'lodash';
+const { omit } = lodash;
 
 class ProductDBRepository implements IProductDBRepository {
   constructor(private db: IProductModel) {}
@@ -85,7 +87,7 @@ class ProductDBRepository implements IProductDBRepository {
   }
 
   private toIProduct = (doc: HydratedDocument<IProductSchema>) => {
-    const product = doc.toObject();
+    const product = omit(doc.toObject(), ['__v', '_id']) as IProductSchema;
     return {
       ...product,
       id: doc._id.toString(),
