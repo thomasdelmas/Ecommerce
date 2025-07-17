@@ -20,6 +20,7 @@ import CacheClient from './clients/cache.js';
 import type { ICacheClient } from './clients/types.js';
 import { loadCacheConfig } from './config/loadCacheConfig.js';
 import { parseProductFilters } from './middlewares/parseProductFilter.js';
+import { errorHandler } from './middlewares/errorHandler.js';
 import {
   CreateProductsRequestBody,
   GetProductsWithFilterQuery,
@@ -87,6 +88,8 @@ class App {
     this.app.get('/', (req: express.Request, res: express.Response) => {
       res.status(200).json({ status: 'ok' });
     });
+
+    this.app.use(errorHandler);
   };
 
   get productController() {

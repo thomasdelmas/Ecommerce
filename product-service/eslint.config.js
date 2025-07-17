@@ -20,7 +20,10 @@ export default defineConfig([
       semi: 'error',
       'prefer-const': 'error',
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' },
+      ],
     },
   },
 ]);
