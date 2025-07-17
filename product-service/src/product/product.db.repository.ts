@@ -6,7 +6,7 @@ import type {
   IProductCreation,
 } from './product.types';
 import { IProductModel } from '../types/db.types';
-import { IProductSchema } from './product.schema';
+import { IProductSchema } from './product.schema.js';
 
 class ProductDBRepository implements IProductDBRepository {
   constructor(private db: IProductModel) {}
