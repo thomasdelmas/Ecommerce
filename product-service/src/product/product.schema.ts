@@ -36,14 +36,4 @@ const ProductSchema = new Schema<IProductSchema>({
   },
 });
 
-ProductSchema.set('toJSON', {
-  transform: (_doc, ret) => {
-    ret.id = ret._id.toString();
-    delete ret.createdAt;
-    delete ret._id;
-    delete ret.__v;
-    return ret;
-  },
-});
-
 export default ProductSchema;
