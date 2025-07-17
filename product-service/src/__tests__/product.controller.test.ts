@@ -92,19 +92,17 @@ describe('ProductController - createProducts', () => {
       );
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
-        creationResults: {
-          createdProducts: mockProducts.createdProducts,
-          failed: [],
+        success: true,
+        data: {
+          creationResults: mockProducts.createdProducts,
+          rejectionResults: [],
         },
-        creationCount: 2,
-        rejectionCount: 0,
-        message: 'Successfuly created products',
       });
     });
 
     it('should return error with products creation fails', async () => {
       const mockProducts = {
-        createdProducts: null,
+        createdProducts: [],
         failed: [
           {
             input: {
@@ -132,8 +130,8 @@ describe('ProductController - createProducts', () => {
         await controller.createProducts(req as Request, res as Response);
       } catch (e) {
         expect(e).toBeInstanceOf(AppError);
-        expect((e as AppError).statusCode).toBe(400);
-        expect((e as AppError).code).toBe('NO_PRODUCT_CREATED');
+        expect((e as AppError).statusCode).toBe(500);
+        expect((e as AppError).code).toBe('PRODUCT_CREATION_FAILED');
         expect((e as AppError).message).toBe('Failed to create product');
       }
     });
@@ -169,10 +167,11 @@ describe('ProductController - createProducts', () => {
 
       expect(res.status).toHaveBeenCalledWith(207);
       expect(res.json).toHaveBeenCalledWith({
-        creationResults: mockProducts,
-        creationCount: 1,
-        rejectionCount: 1,
-        message: 'Succesfuly created some products',
+        success: true,
+        data: {
+          creationResults: mockProducts.createdProducts,
+          rejectionResults: mockProducts.failed,
+        },
       });
     });
 

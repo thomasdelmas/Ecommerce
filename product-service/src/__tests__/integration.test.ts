@@ -155,13 +155,11 @@ describe('ProductService - Integration tests', () => {
 
       expect(res.status).toBe(201);
       expect(res.body).toMatchObject({
-        creationResults: {
-          createdProducts: productToCreate,
-          failed: [],
+        success: true,
+        data: {
+          creationResults: productToCreate,
+          rejectionResults: [],
         },
-        creationCount: 2,
-        rejectionCount: 0,
-        message: 'Successfuly created products',
       });
       await models.product.deleteMany({ category: 'T-shirt' });
     });
@@ -214,8 +212,8 @@ describe('ProductService - Integration tests', () => {
         });
 
       expect(res.status).toBe(207);
-      expect(res.body.creationCount).toBe(2);
-      expect(res.body.rejectionCount).toBe(1);
+      expect(res.body.data.creationResults.length).toBe(2);
+      expect(res.body.data.rejectionResults.length).toBe(1);
     });
 
     it('should reject the valid product already in DB and create another valid one', async () => {
@@ -235,8 +233,8 @@ describe('ProductService - Integration tests', () => {
         });
 
       expect(res.status).toBe(207);
-      expect(res.body.creationCount).toBe(1);
-      expect(res.body.rejectionCount).toBe(1);
+      expect(res.body.data.creationResults.length).toBe(1);
+      expect(res.body.data.rejectionResults.length).toBe(1);
     });
   });
 

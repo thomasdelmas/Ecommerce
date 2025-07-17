@@ -156,7 +156,7 @@ describe('ProductService', () => {
       const result = await productService.createProducts(inputs);
 
       expect(productDBRepository.createProducts).not.toHaveBeenCalled();
-      expect(result.createdProducts).toBeNull();
+      expect(result.createdProducts).toStrictEqual([]);
       expect(result.failed).toHaveLength(2);
       expect(result.failed[0].reason).toBe('Product name already exist');
     });
