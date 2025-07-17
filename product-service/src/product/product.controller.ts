@@ -5,6 +5,7 @@ import {
   GetProductsWithFilteredQuery,
   GetProductWithIdParams,
 } from '../types/request.types';
+import { Errors } from './product.error.js';
 
 class ProductController implements IProductController {
   constructor(private productService: IProductService) {}
@@ -15,101 +16,75 @@ class ProductController implements IProductController {
   ): Promise<any> {
     let returnStatus;
     let returnMessage;
-    try {
-      const { products } = req.body;
 
-      const creationResults =
-        await this.productService.createProducts(products);
+    const { products } = req.body;
 
-      const successCount = creationResults.createdProducts
-        ? creationResults.createdProducts.length
-        : 0;
-      const failCount = creationResults.failed.length;
+    const creationResults = await this.productService.createProducts(products);
 
-      if (successCount && failCount) {
-        returnStatus = 207;
-        returnMessage = 'Succesfuly created some products';
-      } else if (!failCount) {
-        returnStatus = 201;
-        returnMessage = 'Successfuly created products';
-      } else {
-        returnStatus = 400;
-        returnMessage = 'Failed to create products';
-      }
+    const successCount = creationResults.createdProducts
+      ? creationResults.createdProducts.length
+      : 0;
+    const failCount = creationResults.failed.length;
 
-      res.status(returnStatus).json({
-        creationResults,
-        creationCount: successCount,
-        rejectionCount: failCount,
-        message: returnMessage,
-      });
-    } catch (e) {
-      if (e instanceof Error) {
-        res.status(400).json({ message: e.message });
-      }
+    if (successCount && failCount) {
+      returnStatus = 207;
+      returnMessage = 'Succesfuly created some products';
+    } else if (!failCount) {
+      returnStatus = 201;
+      returnMessage = 'Successfuly created products';
+    } else {
+      throw Errors.NoProductCreated();
     }
+
+    res.status(returnStatus).json({
+      creationResults,
+      creationCount: successCount,
+      rejectionCount: failCount,
+      message: returnMessage,
+    });
   }
 
   async getProductWithId(
     req: Request<GetProductWithIdParams, {}, {}>,
     res: Response,
   ): Promise<any> {
-    try {
-      const productId = req.params.id;
+    const productId = req.params.id;
+    const product = await this.productService.getProductWithId(productId);
 
-      const product = await this.productService.getProductWithId(productId);
-
-      if (!product) {
-        res
-          .status(404)
-          .json({ message: 'Could not find product with id: ' + productId });
-        return;
-      }
-
-      res.status(200).json({
-        product,
-        message: 'Found product id ' + productId,
-      });
-    } catch (e) {
-      if (e instanceof Error) {
-        res.status(400).json({ message: e.message });
-      }
+    if (!product) {
+      throw Errors.ProductNotFound();
     }
+
+    res.status(200).json({
+      product,
+      message: 'Found product id ' + productId,
+    });
   }
 
   async getProductsWithFilter(
     req: Request<{}, {}, {}, GetProductsWithFilteredQuery>,
     res: Response,
   ): Promise<any> {
-    try {
-      const page = req.query.page || 1;
-      const limit = req.query.limit || 20;
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 20;
+    const filter = req.filteredQuery || {};
 
-      const filter = req.filteredQuery || {};
+    const filteredProducts = await this.productService.getProductsWithFilter(
+      filter,
+      page,
+      limit,
+    );
 
-      const filteredProducts = await this.productService.getProductsWithFilter(
-        filter,
-        page,
-        limit,
-      );
-
-      const returnCount = filteredProducts.length;
-      const returnStatus = returnCount > 0 ? 200 : 404;
-      const returnMessage =
-        returnCount > 0 ? 'Successfuly found products' : 'No product found.';
-
-      res.status(returnStatus).json({
-        products: filteredProducts,
-        count: returnCount,
-        message: returnMessage,
-      });
-    } catch (e) {
-      if (e instanceof Error) {
-        res
-          .status(500)
-          .json({ message: 'Failed to get products. Server error.' });
-      }
+    const returnCount = filteredProducts.length;
+    if (returnCount < 1) {
+      throw Errors.ProductNotFound();
     }
+
+    res.status(200).json({
+      products: filteredProducts,
+      count: returnCount,
+      message: 'Successfuly found products',
+    });
   }
 }
 

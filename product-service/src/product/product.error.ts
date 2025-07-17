@@ -1,6 +1,12 @@
-import { AppError } from '../errors/appError';
+import { AppError } from '../errors/appError.js';
 
 export const Errors = {
+  NoProductCreated: () =>
+    new AppError('Failed to create product', {
+      statusCode: 400,
+      code: 'NO_PRODUCT_CREATED',
+    }),
+
   ProductAlreadyExist: () =>
     new AppError('User already exist', {
       statusCode: 400,
