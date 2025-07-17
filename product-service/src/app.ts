@@ -5,11 +5,6 @@ import config from './config/validatedConfig.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { verifyJwt, authorize } from '@thomasdelmas/jwt-middlewares';
-import type {
-  ICreateProductsReqBody,
-  IGetProductsWithFilterQuery,
-  IGetProductWithIdParams,
-} from './product/product.types.js';
 import ProductDBRepository from './product/product.db.repository.js';
 import ProductCacheRepository from './product/product.cache.repository.js';
 import ProductService from './product/product.service.js';
@@ -25,6 +20,11 @@ import CacheClient from './clients/cache.js';
 import type { ICacheClient } from './clients/types.js';
 import { loadCacheConfig } from './config/loadCacheConfig.js';
 import { parseProductFilters } from './middlewares/parseProductFilter.js';
+import {
+  CreateProductsRequestBody,
+  GetProductsWithFilterQuery,
+  GetProductWithIdParams,
+} from './types/request.types.js';
 
 class App {
   app: express.Application;
@@ -57,7 +57,7 @@ class App {
         requiredPermissions: ['write:product'],
       }),
       (
-        req: express.Request<{}, {}, ICreateProductsReqBody>,
+        req: express.Request<{}, {}, CreateProductsRequestBody>,
         res: express.Response,
       ) => this.productController.createProducts(req, res),
     );
@@ -67,7 +67,7 @@ class App {
       getProductValidation,
       validateRequest,
       (
-        req: express.Request<IGetProductWithIdParams, {}, {}>,
+        req: express.Request<GetProductWithIdParams, {}, {}>,
         res: express.Response,
       ) => this.productController.getProductWithId(req, res),
     );
@@ -78,7 +78,7 @@ class App {
       getProductsValidation,
       validateRequest,
       (
-        req: express.Request<{}, {}, {}, IGetProductsWithFilterQuery>,
+        req: express.Request<{}, {}, {}, GetProductsWithFilterQuery>,
         res: express.Response,
       ) => this.productController.getProductsWithFilter(req, res),
     );

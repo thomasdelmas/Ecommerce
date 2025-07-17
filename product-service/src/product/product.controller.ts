@@ -1,17 +1,16 @@
 import { Request, Response } from 'express';
-import type {
-  ICreateProductsReqBody,
-  IGetProductsWithFilteredQuery,
-  IGetProductWithIdParams,
-  IProductController,
-  IProductService,
-} from './product.types';
+import type { IProductController, IProductService } from './product.types';
+import {
+  CreateProductsRequestBody,
+  GetProductsWithFilteredQuery,
+  GetProductWithIdParams,
+} from '../types/request.types';
 
 class ProductController implements IProductController {
   constructor(private productService: IProductService) {}
 
   async createProducts(
-    req: Request<{}, {}, ICreateProductsReqBody>,
+    req: Request<{}, {}, CreateProductsRequestBody>,
     res: Response,
   ): Promise<any> {
     let returnStatus;
@@ -52,7 +51,7 @@ class ProductController implements IProductController {
   }
 
   async getProductWithId(
-    req: Request<IGetProductWithIdParams, {}, {}>,
+    req: Request<GetProductWithIdParams, {}, {}>,
     res: Response,
   ): Promise<any> {
     try {
@@ -79,7 +78,7 @@ class ProductController implements IProductController {
   }
 
   async getProductsWithFilter(
-    req: Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
+    req: Request<{}, {}, {}, GetProductsWithFilteredQuery>,
     res: Response,
   ): Promise<any> {
     try {
