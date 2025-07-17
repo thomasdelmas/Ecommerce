@@ -26,6 +26,8 @@ import {
   GetProductsWithFilterQuery,
   GetProductWithIdParams,
 } from './types/request.types.js';
+import { swaggerSpec } from './docs/swagger.js';
+import swaggerUi from 'swagger-ui-express';
 
 class App {
   app: express.Application;
@@ -47,49 +49,85 @@ class App {
   };
 
   configureRoutes = () => {
-    this.app.post(
-      '/admin/product',
-      createProductsValidation,
-      validateRequest,
-      verifyJwt({
-        secretOrPublicKey: config.privateKey,
-      }),
-      authorize({
-        requiredPermissions: ['write:product'],
-      }),
-      (
-        req: express.Request<{}, {}, CreateProductsRequestBody>,
-        res: express.Response,
-      ) => this.productController.createProducts(req, res),
-    );
+		this.app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-    this.app.get(
-      '/product/:id',
-      getProductValidation,
-      validateRequest,
-      (
-        req: express.Request<GetProductWithIdParams, {}, {}>,
-        res: express.Response,
-      ) => this.productController.getProductWithId(req, res),
-    );
+		/**
+			* @openapi
+			* /admin/product:
+			*   post:
+			*     tags:
+			*       - Product
+			*     summary: Create new products
+			*     requestBody:
+			*       description: Name, category, price and stock
+			*       required: true
+			*       content:
+			*         application/json:
+			*           schema:
+			*             $ref: "#/components/schemas/CreateProductsRequest"
+			*     responses:
+			*       201:
+			*         description: Successfuly created Products
+			*         content:
+			*           application/json:
+			*             schema:
+			*               $ref: "#/components/schemas/CreatedProductsResponse"
+			*       207:
+			*         description: Partial product creation
+			*         content:
+			*           application/json:
+			*             schema:
+			*               $ref: "#/components/schemas/CreatedProductsResponse"
+			*       500:
+			*         description: No product created
+			*         content:
+			*           application/json:
+			*             schema:
+			*               $ref: "#/components/schemas/NoProductCreatedError"
+			*/
+		this.app.post(
+			'/admin/product',
+			createProductsValidation,
+			validateRequest,
+			verifyJwt({
+				secretOrPublicKey: config.privateKey,
+			}),
+			authorize({
+				requiredPermissions: ['write:product'],
+			}),
+			(
+				req: express.Request<{}, {}, CreateProductsRequestBody>,
+				res: express.Response,
+			) => this.productController.createProducts(req, res),
+		);
 
-    this.app.get(
-      '/product',
-      parseProductFilters,
-      getProductsValidation,
-      validateRequest,
-      (
-        req: express.Request<{}, {}, {}, GetProductsWithFilterQuery>,
-        res: express.Response,
-      ) => this.productController.getProductsWithFilter(req, res),
-    );
+		this.app.get(
+			'/product/:id',
+			getProductValidation,
+			validateRequest,
+			(
+				req: express.Request<GetProductWithIdParams, {}, {}>,
+				res: express.Response,
+			) => this.productController.getProductWithId(req, res),
+		);
 
-    // HealthCheck endpoint
-    this.app.get('/', (req: express.Request, res: express.Response) => {
-      res.status(200).json({ status: 'ok' });
-    });
+		this.app.get(
+			'/product',
+			parseProductFilters,
+			getProductsValidation,
+			validateRequest,
+			(
+				req: express.Request<{}, {}, {}, GetProductsWithFilterQuery>,
+				res: express.Response,
+			) => this.productController.getProductsWithFilter(req, res),
+		);
 
-    this.app.use(errorHandler);
+		// HealthCheck endpoint
+		this.app.get('/', (req: express.Request, res: express.Response) => {
+			res.status(200).json({ status: 'ok' });
+		});
+
+		this.app.use(errorHandler);
   };
 
   get productController() {
