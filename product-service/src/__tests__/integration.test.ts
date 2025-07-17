@@ -172,7 +172,7 @@ describe('ProductService - Integration tests', () => {
         .send(req);
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe('No JWT provided');
+      expect(res.body.error.message).toBe('No JWT provided');
     });
 
     it('should reject creation without proper permission', async () => {
@@ -188,7 +188,7 @@ describe('ProductService - Integration tests', () => {
         .send(req);
 
       expect(res.status).toBe(403);
-      expect(res.body.message).toBe('Forbidden');
+      expect(res.body.error.message).toBe('Forbidden');
     });
 
     it('should reject some duplicate inputs products and create valid ones', async () => {

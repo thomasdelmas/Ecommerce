@@ -7,13 +7,12 @@ import {
   it,
 } from '@jest/globals';
 import { Request, Response } from 'express';
-import type {
-  IGetProductsWithFilteredQuery,
-  IGetProductWithIdParams,
-  IProduct,
-  IProductService,
-} from '../product/product.types';
+import type { IProduct, IProductService } from '../product/product.types';
 import ProductController from '../product/product.controller';
+import {
+  GetProductsWithFilteredQuery,
+  GetProductWithIdParams,
+} from '../types/request.types';
 
 describe('ProductController - createProducts', () => {
   let productServiceMock: jest.Mocked<IProductService>;
@@ -208,7 +207,7 @@ describe('ProductController - createProducts', () => {
       productServiceMock.getProductWithId.mockResolvedValue(mockProduct);
 
       await controller.getProductWithId(
-        req as Request<IGetProductWithIdParams, {}, {}>,
+        req as Request<GetProductWithIdParams, {}, {}>,
         res as Response,
       );
 
@@ -226,7 +225,7 @@ describe('ProductController - createProducts', () => {
       productServiceMock.getProductWithId.mockResolvedValue(null);
 
       await controller.getProductWithId(
-        req as Request<IGetProductWithIdParams, {}, {}>,
+        req as Request<GetProductWithIdParams, {}, {}>,
         res as Response,
       );
 
@@ -245,7 +244,7 @@ describe('ProductController - createProducts', () => {
       );
 
       await controller.getProductWithId(
-        req as Request<IGetProductWithIdParams, {}, {}>,
+        req as Request<GetProductWithIdParams, {}, {}>,
         res as Response,
       );
 
@@ -265,7 +264,7 @@ describe('ProductController - createProducts', () => {
           category: { in: ['T-shirt', 'Pant'] },
           price: { min: 20, max: 100 },
         },
-      } as IGetProductsWithFilteredQuery;
+      } as GetProductsWithFilteredQuery;
     });
 
     it('should return a product successfully', async () => {
@@ -290,7 +289,7 @@ describe('ProductController - createProducts', () => {
       productServiceMock.getProductsWithFilter.mockResolvedValue(mockProduct);
 
       await controller.getProductsWithFilter(
-        req as Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
+        req as Request<{}, {}, {}, GetProductsWithFilteredQuery>,
         res as Response,
       );
 
@@ -319,7 +318,7 @@ describe('ProductController - createProducts', () => {
       productServiceMock.getProductsWithFilter.mockResolvedValue(mockProduct);
 
       await controller.getProductsWithFilter(
-        req as Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
+        req as Request<{}, {}, {}, GetProductsWithFilteredQuery>,
         res as Response,
       );
 
@@ -349,7 +348,7 @@ describe('ProductController - createProducts', () => {
       });
 
       await controller.getProductsWithFilter(
-        req as Request<{}, {}, {}, IGetProductsWithFilteredQuery>,
+        req as Request<{}, {}, {}, GetProductsWithFilteredQuery>,
         res as Response,
       );
 
