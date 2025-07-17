@@ -61,7 +61,7 @@ export type IProductCacheRepository = {
 
 export type IProductService = {
   createProducts: (inputs: CreateProductsPayload[]) => Promise<{
-    createdProducts: IProduct[] | null;
+    createdProducts: IProduct[];
     failed: { input: CreateProductsPayload; reason: string }[];
   }>;
   getProductWithId: (id: string) => Promise<IProduct | null>;

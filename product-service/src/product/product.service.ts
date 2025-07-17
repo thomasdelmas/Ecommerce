@@ -17,7 +17,7 @@ class ProductService implements IProductService {
   async createProducts(inputs: CreateProductsPayload[]) {
     const successful: IProduct[] = [];
     const failed: { input: CreateProductsPayload; reason: string }[] = [];
-    let createdProducts: IProduct[] | null = null;
+    let createdProducts: IProduct[] = [];
 
     const searchResults: PromiseSettledResult<IProduct>[] =
       await Promise.allSettled(

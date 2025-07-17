@@ -1,10 +1,14 @@
 import { AppError } from '../errors/appError.js';
+import { CreateProductsPayload } from './product.types.js';
 
 export const Errors = {
-  NoProductCreated: () =>
+  NoProductCreated: (
+    failed: { input: CreateProductsPayload; reason: string }[],
+  ) =>
     new AppError('Failed to create product', {
-      statusCode: 400,
-      code: 'NO_PRODUCT_CREATED',
+      statusCode: 500,
+      code: 'PRODUCT_CREATION_FAILED',
+      meta: { failed },
     }),
 
   ProductAlreadyExist: () =>

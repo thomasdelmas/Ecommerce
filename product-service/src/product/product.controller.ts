@@ -6,16 +6,16 @@ import {
   GetProductWithIdParams,
 } from '../types/request.types';
 import { Errors } from './product.error.js';
+import { createProductSuccessData, ServiceResponse } from '../types/api.types';
 
 class ProductController implements IProductController {
   constructor(private productService: IProductService) {}
 
   async createProducts(
     req: Request<{}, {}, CreateProductsRequestBody>,
-    res: Response,
+    res: Response<ServiceResponse<createProductSuccessData>>,
   ): Promise<any> {
     let returnStatus;
-    let returnMessage;
 
     const { products } = req.body;
 
@@ -28,19 +28,18 @@ class ProductController implements IProductController {
 
     if (successCount && failCount) {
       returnStatus = 207;
-      returnMessage = 'Succesfuly created some products';
     } else if (!failCount) {
       returnStatus = 201;
-      returnMessage = 'Successfuly created products';
     } else {
-      throw Errors.NoProductCreated();
+      throw Errors.NoProductCreated(creationResults.failed);
     }
 
     res.status(returnStatus).json({
-      creationResults,
-      creationCount: successCount,
-      rejectionCount: failCount,
-      message: returnMessage,
+      success: true,
+      data: {
+        creationResults: creationResults.createdProducts,
+        rejectionResults: creationResults.failed,
+      },
     });
   }
 
