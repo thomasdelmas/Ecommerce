@@ -216,8 +216,8 @@ describe('ProductController - createProducts', () => {
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        product: mockProduct,
-        message: 'Found product id ' + req.params?.id,
+        success: true,
+        data: { product: mockProduct },
       });
     });
 
@@ -235,8 +235,8 @@ describe('ProductController - createProducts', () => {
         );
         expect(e).toBeInstanceOf(AppError);
         expect((e as AppError).statusCode).toBe(404);
-        expect((e as AppError).code).toBe('USER_NOT_FOUND');
-        expect((e as AppError).message).toBe('User not found');
+        expect((e as AppError).code).toBe('PRODUCT_NOT_FOUND');
+        expect((e as AppError).message).toBe('Product not found');
       }
     });
 
@@ -333,8 +333,8 @@ describe('ProductController - createProducts', () => {
         );
         expect(e).toBeInstanceOf(AppError);
         expect((e as AppError).statusCode).toBe(404);
-        expect((e as AppError).code).toBe('USER_NOT_FOUND');
-        expect((e as AppError).message).toBe('User not found');
+        expect((e as AppError).code).toBe('PRODUCT_NOT_FOUND');
+        expect((e as AppError).message).toBe('Product not found');
       }
     });
 

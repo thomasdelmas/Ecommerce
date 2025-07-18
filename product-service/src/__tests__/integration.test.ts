@@ -267,8 +267,8 @@ describe('ProductService - Integration tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body).toMatchObject({
-        product: expectedProduct,
-        message: 'Found product id ' + productId,
+        success: true,
+        data: { product: expectedProduct },
       });
 
       await models.product.deleteMany({ _id: productId });
@@ -282,7 +282,7 @@ describe('ProductService - Integration tests', () => {
       );
 
       expect(res.status).toBe(404);
-      expect(res.body.error.message).toContain('User not found');
+      expect(res.body.error.message).toContain('Product not found');
     });
 
     it('should return 400 for invalid product ID', async () => {
