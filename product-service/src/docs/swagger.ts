@@ -50,6 +50,23 @@ export const swaggerSpec = swaggerJSDoc({
             },
           },
         },
+        FindProductWithIdResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'object',
+              properties: {
+                product: {
+                  $ref: '#/components/schemas/Product',
+                },
+              },
+            },
+          },
+        },
         Product: {
           types: 'object',
           properties: {
@@ -102,6 +119,28 @@ export const swaggerSpec = swaggerJSDoc({
             stock: {
               type: 'number',
               example: '666',
+            },
+          },
+        },
+        NotFoundError: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false,
+            },
+            error: {
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string',
+                  example: 'Product not found',
+                },
+                code: {
+                  type: 'string',
+                  example: 'PRODUCT_NOT_FOUND',
+                },
+              },
             },
           },
         },

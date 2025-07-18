@@ -28,6 +28,11 @@ import {
 } from './types/request.types.js';
 import { swaggerSpec } from './docs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
+import {
+  createProductSuccessData,
+  getProductWithIdSuccessData,
+  ServiceResponse,
+} from './types/api.types.js';
 
 class App {
   app: express.Application;
@@ -97,17 +102,45 @@ class App {
       }),
       (
         req: express.Request<{}, {}, CreateProductsRequestBody>,
-        res: express.Response,
+        res: express.Response<ServiceResponse<createProductSuccessData>>,
       ) => this.productController.createProducts(req, res),
     );
 
+    /**
+     * @openapi
+     * /product/{id}:
+     *   get:
+     *     tags:
+     *       - Product
+     *     summary: Search for product with id
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         schema:
+     *           type: integer
+     *         required: true
+     *         description: Numeric ID of the user to get
+     *     responses:
+     *       200:
+     *         description: Successfuly Found Products
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/FindProductWithIdResponse"
+     *       404:
+     *         description: No product found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/NotFoundError"
+     */
     this.app.get(
       '/product/:id',
       getProductValidation,
       validateRequest,
       (
         req: express.Request<GetProductWithIdParams, {}, {}>,
-        res: express.Response,
+        res: express.Response<ServiceResponse<getProductWithIdSuccessData>>,
       ) => this.productController.getProductWithId(req, res),
     );
 
