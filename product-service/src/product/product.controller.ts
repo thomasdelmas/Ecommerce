@@ -6,7 +6,11 @@ import {
   GetProductWithIdParams,
 } from '../types/request.types';
 import { Errors } from './product.error.js';
-import { createProductSuccessData, ServiceResponse } from '../types/api.types';
+import {
+  createProductSuccessData,
+  getProductWithIdSuccessData,
+  ServiceResponse,
+} from '../types/api.types';
 
 class ProductController implements IProductController {
   constructor(private productService: IProductService) {}
@@ -45,7 +49,7 @@ class ProductController implements IProductController {
 
   async getProductWithId(
     req: Request<GetProductWithIdParams, {}, {}>,
-    res: Response,
+    res: Response<ServiceResponse<getProductWithIdSuccessData>>,
   ): Promise<any> {
     const productId = req.params.id;
     const product = await this.productService.getProductWithId(productId);
@@ -55,8 +59,8 @@ class ProductController implements IProductController {
     }
 
     res.status(200).json({
-      product,
-      message: 'Found product id ' + productId,
+      success: true,
+      data: { product },
     });
   }
 
