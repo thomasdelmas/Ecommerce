@@ -67,6 +67,26 @@ export const swaggerSpec = swaggerJSDoc({
             },
           },
         },
+        FindProductWithFilterResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'object',
+              properties: {
+                products: {
+                  type: 'array',
+                  items: {
+                    $ref: '#/components/schemas/Product',
+                  },
+                },
+              },
+            },
+          },
+        },
         Product: {
           types: 'object',
           properties: {

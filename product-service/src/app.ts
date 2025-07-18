@@ -30,6 +30,7 @@ import { swaggerSpec } from './docs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
 import {
   createProductSuccessData,
+  getProductsWithFilterSuccessData,
   getProductWithIdSuccessData,
   ServiceResponse,
 } from './types/api.types.js';
@@ -144,6 +145,70 @@ class App {
       ) => this.productController.getProductWithId(req, res),
     );
 
+    /**
+     * @openapi
+     * /product:
+     *   get:
+     *     tags:
+     *       - Product
+     *     summary: Search for product with filter
+     *     parameters:
+     *       - in: query
+     *         name: category
+     *         schema:
+     *           type: string
+     *         required: false
+     *         description: Category names of the filter
+     *       - in: query
+     *         name: minPrice
+     *         schema:
+     *           type: number
+     *         required: false
+     *         description: Minimun price of filter
+     *       - in: query
+     *         name: maxPrice
+     *         schema:
+     *           type: number
+     *         required: false
+     *         description: Maximum price of filter
+     *       - in: query
+     *         name: searchTerm
+     *         schema:
+     *           type: string
+     *         required: false
+     *         description: Product name terms of the filter
+     *       - in: query
+     *         name: currency
+     *         schema:
+     *           type: number
+     *         required: false
+     *         description: Currency of the filter
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: number
+     *         required: false
+     *         description: Page number of the filter
+     *       - in: query
+     *         name: limit
+     *         schema:
+     *           type: number
+     *         required: false
+     *         description: Product per page of the filter
+     *     responses:
+     *       200:
+     *         description: Successfuly Found Products
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/FindProductWithFilterResponse"
+     *       404:
+     *         description: No product found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/NotFoundError"
+     */
     this.app.get(
       '/product',
       parseProductFilters,
@@ -151,7 +216,9 @@ class App {
       validateRequest,
       (
         req: express.Request<{}, {}, {}, GetProductsWithFilterQuery>,
-        res: express.Response,
+        res: express.Response<
+          ServiceResponse<getProductsWithFilterSuccessData>
+        >,
       ) => this.productController.getProductsWithFilter(req, res),
     );
 
