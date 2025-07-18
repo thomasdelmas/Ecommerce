@@ -307,7 +307,7 @@ describe('ProductService - Integration tests', () => {
       expect(getProductsWithFilterSpy).toHaveBeenCalled();
 
       expect(res.status).toBe(200);
-      expect(res.body.products).toEqual(
+      expect(res.body.data.products).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             name: 'Purple Pant',
@@ -326,8 +326,7 @@ describe('ProductService - Integration tests', () => {
         ]),
       );
 
-      expect(res.body.count).toBe(2);
-      expect(res.body.message).toBe('Successfuly found products');
+      expect(res.body.data.products.length).toBe(2);
     });
 
     it('should retrieve filtered products information succesfuly with cache hit (same request than the previous)', async () => {
@@ -345,7 +344,7 @@ describe('ProductService - Integration tests', () => {
       expect(getProductsWithFilterSpy).not.toHaveBeenCalled();
 
       expect(res.status).toBe(200);
-      expect(res.body.products).toEqual(
+      expect(res.body.data.products).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             name: 'Purple Pant',
@@ -364,8 +363,7 @@ describe('ProductService - Integration tests', () => {
         ]),
       );
 
-      expect(res.body.count).toBe(2);
-      expect(res.body.message).toBe('Successfuly found products');
+      expect(res.body.data.products.length).toBe(2);
     });
 
     it('should return products matching searchTerm', async () => {
@@ -374,8 +372,8 @@ describe('ProductService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(200);
-      expect(res.body.products.length).toBeGreaterThan(0);
-      res.body.products.forEach((p: any) =>
+      expect(res.body.data.products.length).toBeGreaterThan(0);
+      res.body.data.products.forEach((p: any) =>
         expect(p.name.toLowerCase()).toContain('pant'),
       );
     });
@@ -386,7 +384,7 @@ describe('ProductService - Integration tests', () => {
         .send();
 
       expect(res.status).toBe(200);
-      expect(res.body.products.length).toBeLessThanOrEqual(2);
+      expect(res.body.data.products.length).toBeLessThanOrEqual(2);
     });
 
     it('should hit the cache after first request', async () => {

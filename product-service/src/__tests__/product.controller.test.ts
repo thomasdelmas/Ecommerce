@@ -303,9 +303,8 @@ describe('ProductController - createProducts', () => {
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
-        products: mockProduct,
-        count: mockProduct.length,
-        message: 'Successfuly found products',
+        success: true,
+        data: { products: mockProduct },
       });
     });
 
