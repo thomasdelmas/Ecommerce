@@ -8,6 +8,7 @@ import {
 import { Errors } from './product.error.js';
 import {
   createProductSuccessData,
+  getProductsWithFilterSuccessData,
   getProductWithIdSuccessData,
   ServiceResponse,
 } from '../types/api.types';
@@ -52,6 +53,7 @@ class ProductController implements IProductController {
     res: Response<ServiceResponse<getProductWithIdSuccessData>>,
   ): Promise<any> {
     const productId = req.params.id;
+
     const product = await this.productService.getProductWithId(productId);
 
     if (!product) {
@@ -66,7 +68,7 @@ class ProductController implements IProductController {
 
   async getProductsWithFilter(
     req: Request<{}, {}, {}, GetProductsWithFilteredQuery>,
-    res: Response,
+    res: Response<ServiceResponse<getProductsWithFilterSuccessData>>,
   ): Promise<any> {
     const page = req.query.page || 1;
     const limit = req.query.limit || 20;
@@ -78,15 +80,13 @@ class ProductController implements IProductController {
       limit,
     );
 
-    const returnCount = filteredProducts.length;
-    if (returnCount < 1) {
+    if (filteredProducts.length < 1) {
       throw Errors.ProductNotFound();
     }
 
     res.status(200).json({
-      products: filteredProducts,
-      count: returnCount,
-      message: 'Successfuly found products',
+      success: true,
+      data: { products: filteredProducts },
     });
   }
 }
