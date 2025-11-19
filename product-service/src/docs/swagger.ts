@@ -87,6 +87,74 @@ export const swaggerSpec = swaggerJSDoc({
             },
           },
         },
+        ValidateStockRequest: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/ValidateStockPayload',
+          },
+        },
+        AllProductsInStockResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true,
+            },
+            data: {
+              type: 'object',
+              properties: {
+                products: {
+                  type: 'array',
+                  items: {
+                    $ref: '#/components/schemas/Product',
+                  },
+                },
+              },
+            },
+          },
+        },
+        ProductsValidationFailedResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false,
+            },
+            error: {
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string',
+                  example: 'Failed to validate products',
+                },
+                code: {
+                  type: 'string',
+                  example: 'PRODUCTS_VALIDATION_FAILED',
+                },
+                meta: {
+                  type: 'object',
+                  properties: {
+                    failed: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          requestedProduct: {
+                            $ref: '#/components/schemas/ValidateStockPayload',
+                          },
+                          reason: {
+                            type: 'string',
+                            example: 'INSUFFICIENT_STOCK',
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         Product: {
           types: 'object',
           properties: {
@@ -113,6 +181,20 @@ export const swaggerSpec = swaggerJSDoc({
             currency: {
               type: 'string',
               example: 'euro',
+            },
+            stock: {
+              type: 'number',
+              example: '666',
+            },
+          },
+        },
+        ValidateStockPayload: {
+          types: 'object',
+          required: ['productId', 'stock'],
+          properties: {
+            productId: {
+              type: 'string',
+              example: '6862b2c2f4b88483321b9fda',
             },
             stock: {
               type: 'number',

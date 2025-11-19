@@ -251,7 +251,7 @@ class App {
      *         content:
      *           application/json:
      *             schema:
-     *               $ref: "#/components/schemas/InsufficientStockResponse"
+     *               $ref: "#/components/schemas/ProductsValidationFailedResponse"
      */
     this.app.post(
       '/validateStock',
