@@ -26,6 +26,7 @@ describe('ProductController - createProducts', () => {
       createProducts: jest.fn(),
       getProductWithId: jest.fn(),
       getProductsWithFilter: jest.fn(),
+      validateProductStock: jest.fn(),
     } as unknown as jest.Mocked<IProductService>;
 
     controller = new ProductController(productServiceMock);
@@ -362,6 +363,154 @@ describe('ProductController - createProducts', () => {
         );
         expect(e).toBeInstanceOf(Error);
         expect((e as Error).message).toBe('Cache error');
+      }
+    });
+  });
+
+  describe('validateProductStock', () => {
+    beforeAll(() => {
+      req = {
+        body: {
+          products: [
+            {
+              id: '6862b2c2f4b88483321b9fda',
+              stock: 400,
+            },
+            {
+              id: '6862b285f4b88483321b9fda',
+              stock: 1,
+            },
+          ],
+        },
+      };
+    });
+
+    it('should validate product stock successfully', async () => {
+      const mockProducts = {
+        validatedProducts: [
+          {
+            id: '6862b2c2f4b88483321b9fda',
+            createdAt: Date.now(),
+            name: 'T-shirt blue',
+            category: 'T-shirt',
+            price: 33.5,
+            currency: 'euro',
+            stock: 5,
+          },
+          {
+            id: '6862b285f4b88483321b9fda',
+            createdAt: Date.now(),
+            name: 'T-shirt vert',
+            category: 'T-shirt',
+            price: 36.5,
+            currency: 'euro',
+            stock: 10,
+          },
+        ],
+        unvalidatedProducts: [],
+      };
+
+      productServiceMock.validateProductStock.mockResolvedValue(mockProducts);
+
+      await controller.validateStock(req as Request, res as Response);
+
+      expect(productServiceMock.validateProductStock).toHaveBeenCalledWith(
+        req.body.products,
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { ...mockProducts },
+      });
+    });
+
+    it('should partially validate product stock returning validated products and unvalidated products request', async () => {
+      const mockProducts = {
+        validatedProducts: [
+          {
+            id: '6862b2c2f4b88483321b9fda',
+            createdAt: Date.now(),
+            name: 'T-shirt blue',
+            category: 'T-shirt',
+            price: 33.5,
+            currency: 'euro',
+            stock: 3,
+          },
+        ],
+        unvalidatedProducts: [
+          {
+            requestedProduct: {
+              productId: '6862b285f4b88483321b9fda',
+              stock: 8,
+            },
+            reason: 'INSUFFICIENT_STOCK',
+          },
+        ],
+      };
+
+      productServiceMock.validateProductStock.mockResolvedValue(mockProducts);
+
+      await controller.validateStock(req as Request, res as Response);
+
+      expect(productServiceMock.validateProductStock).toHaveBeenCalledWith(
+        req.body.products,
+      );
+
+      expect(res.status).toHaveBeenCalledWith(207);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: { ...mockProducts },
+      });
+    });
+
+    it('should throw an error with an unsufficient product stock', async () => {
+      const mockProducts = {
+        validatedProducts: [],
+        unvalidatedProducts: [
+          {
+            requestedProduct: {
+              productId: '6862b2c2f4b88483321b9fda',
+              stock: 3,
+            },
+            reason: 'INSUFFICIENT_STOCK',
+          },
+          {
+            requestedProduct: {
+              productId: '6862b2c2f4b88483321b9fdb',
+              stock: 8,
+            },
+            reason: 'INSUFFICIENT_STOCK',
+          },
+        ],
+      };
+
+      productServiceMock.validateProductStock.mockResolvedValue(mockProducts);
+
+      try {
+        await controller.validateStock(req as Request, res as Response);
+      } catch (e) {
+        expect(productServiceMock.validateProductStock).toHaveBeenCalledWith(
+          req.body.products,
+        );
+        expect(e).toBeInstanceOf(AppError);
+        expect((e as AppError).message).toBe('Failed to validate products');
+        expect((e as AppError).code).toBe('PRODUCTS_VALIDATION_FAILED');
+        expect((e as AppError).statusCode).toBe(400);
+        expect((e as AppError).meta?.failed).toBe(
+          mockProducts.unvalidatedProducts,
+        );
+      }
+    });
+
+    it('should handle service errors gracefully', async () => {
+      productServiceMock.validateProductStock.mockRejectedValue(
+        new Error('DB error'),
+      );
+      try {
+        await controller.validateStock(req as Request, res as Response);
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('DB error');
       }
     });
   });

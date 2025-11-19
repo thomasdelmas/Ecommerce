@@ -34,6 +34,7 @@ describe('ProductService', () => {
     productDBRepository = {
       getProductByName: jest.fn(),
       createProducts: jest.fn(),
+      getProductsById: jest.fn(),
       getProductById: jest.fn(),
       getProductsWithFilter: jest.fn(),
     };
@@ -359,6 +360,137 @@ describe('ProductService', () => {
         [],
         `filterKey:${sha1(JSON.stringify(filter))}:page:${1}:productPerPage:${20}`,
       );
+    });
+  });
+
+  describe('validateProductStock', () => {
+    it('should search for requested product, verify sufficient stock then return product with requested stock', async () => {
+      const inputs = [
+        {
+          productId: 'ffffffffffffffffffffffff',
+          stock: 5,
+        },
+        {
+          productId: 'gggggggggggggggggggggggg',
+          stock: 10,
+        },
+      ];
+      const stockValidatedProducts: IProduct[] = [
+        {
+          id: 'ffffffffffffffffffffffff',
+          name: 'T-shirt blue',
+          category: 'T-shirt',
+          price: 33.5,
+          stock: 30,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+        {
+          id: 'gggggggggggggggggggggggg',
+          name: 'T-shirt green',
+          category: 'T-shirt',
+          price: 34.0,
+          stock: 90,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+      ];
+
+      productDBRepository.getProductsById.mockResolvedValue(
+        stockValidatedProducts,
+      );
+
+      const result = await productService.validateProductStock(inputs);
+
+      expect(productDBRepository.getProductsById).toHaveBeenCalledTimes(1);
+      expect(result.unvalidatedProducts).toHaveLength(0);
+      expect(result.validatedProducts).toHaveLength(2);
+    });
+
+    it('should not validate products with not matching ids in db', async () => {
+      const inputs = [
+        {
+          productId: 'ffffffffffffffffffffffff',
+          stock: 1,
+        },
+        {
+          productId: 'gggggggggggggggggggggggg',
+          stock: 9999,
+        },
+      ];
+      const stockValidatedProducts: IProduct[] = [
+        {
+          id: 'not-matching-id',
+          name: 'T-shirt blue',
+          category: 'T-shirt',
+          price: 33.5,
+          stock: 2,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+        {
+          id: 'gggggggggggggggggggggggg',
+          name: 'T-shirt green',
+          category: 'T-shirt',
+          price: 34.0,
+          stock: 10000,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+      ];
+
+      productDBRepository.getProductsById.mockResolvedValue(
+        stockValidatedProducts,
+      );
+
+      const result = await productService.validateProductStock(inputs);
+
+      expect(productDBRepository.getProductsById).toHaveBeenCalledTimes(1);
+      expect(result.unvalidatedProducts).toHaveLength(1);
+      expect(result.validatedProducts).toHaveLength(1);
+    });
+
+    it('should return partial failure/success on edges values', async () => {
+      const inputs = [
+        {
+          productId: 'ffffffffffffffffffffffff',
+          stock: 0,
+        },
+        {
+          productId: 'gggggggggggggggggggggggg',
+          stock: 10,
+        },
+      ];
+      const stockValidatedProducts: IProduct[] = [
+        {
+          id: 'not-matching-id',
+          name: 'T-shirt blue',
+          category: 'T-shirt',
+          price: 33.5,
+          stock: 5,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+        {
+          id: 'gggggggggggggggggggggggg',
+          name: 'T-shirt green',
+          category: 'T-shirt',
+          price: 34.0,
+          stock: 0,
+          createdAt: Date.now(),
+          currency: 'euro',
+        },
+      ];
+
+      productDBRepository.getProductsById.mockResolvedValue(
+        stockValidatedProducts,
+      );
+
+      const result = await productService.validateProductStock(inputs);
+
+      expect(productDBRepository.getProductsById).toHaveBeenCalledTimes(1);
+      expect(result.unvalidatedProducts).toHaveLength(2);
+      expect(result.validatedProducts).toHaveLength(0);
     });
   });
 });

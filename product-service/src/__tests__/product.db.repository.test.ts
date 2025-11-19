@@ -30,6 +30,7 @@ describe('ProductRepository', () => {
     dbMock = {
       create: jest.fn(),
       findOne: jest.fn(),
+      find: jest.fn(),
     } as unknown as jest.Mocked<IProductModel>;
 
     repository = new ProductRepository(dbMock);
@@ -168,6 +169,79 @@ describe('ProductRepository', () => {
       await expect(repository.getProductByName(name)).rejects.toThrow(
         'DB error',
       );
+    });
+  });
+
+  describe('getProductsById', () => {
+    it('should call db.findOne with id and return product', async () => {
+      const productId = '6862b2c2f4b88483321b9fda';
+      const productDoc = [
+        {
+          createdAt: Date.now(),
+          name: 'T-shirt blue',
+          category: 'T-shirt',
+          price: 33.5,
+          currency: 'euro',
+          stock: 5,
+        },
+      ];
+      productModel = mongoose.model('product', ProductSchema);
+      repository = new ProductRepository(productModel);
+      mockingoose(productModel).toReturn(productDoc, 'find');
+
+      const res = await repository.getProductsById([productId]);
+
+      expect(res[0]).toMatchObject(productDoc[0]);
+
+      mockingoose(productModel).reset('find');
+    });
+
+    it('should propagate errors if db.find rejects', async () => {
+      productModel = mongoose.model('product', ProductSchema);
+      repository = new ProductRepository(dbMock);
+      dbMock.find.mockImplementation(() => {
+        throw new Error('DB error');
+      });
+
+      await expect(
+        repository.getProductsById(['6862b2c2f4b88483321b9fda']),
+      ).rejects.toThrow('DB error');
+    });
+  });
+
+  describe('getProductById', () => {
+    it('should call db.findOne with id and return product', async () => {
+      const productId = '6862b2c2f4b88483321b9fda';
+      const productDoc = {
+        createdAt: Date.now(),
+        name: 'T-shirt blue',
+        category: 'T-shirt',
+        price: 33.5,
+        currency: 'euro',
+        stock: 5,
+      };
+      // moongoose.spyOn('getProductsById')
+      productModel = mongoose.model('product', ProductSchema);
+      repository = new ProductRepository(productModel);
+      mockingoose(productModel).toReturn([productDoc], 'find');
+
+      const res = await repository.getProductById(productId);
+
+      expect(res).toMatchObject(productDoc);
+
+      mockingoose(productModel).reset('find');
+    });
+
+    it('should propagate errors if db.find rejects', async () => {
+      productModel = mongoose.model('product', ProductSchema);
+      repository = new ProductRepository(dbMock);
+      dbMock.find.mockImplementation(() => {
+        throw new Error('DB error');
+      });
+
+      await expect(
+        repository.getProductById('6862b2c2f4b88483321b9fda'),
+      ).rejects.toThrow('DB error');
     });
   });
 });

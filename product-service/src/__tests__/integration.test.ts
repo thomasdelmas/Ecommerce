@@ -412,4 +412,176 @@ describe('ProductService - Integration tests', () => {
       expect(res.status).toBe(400);
     });
   });
+
+  describe('validateStock endpoint', () => {
+    it('should retrieve product stock succesfuly', async () => {
+      const productId = new Types.ObjectId().toHexString();
+
+      const newProducts = [
+        {
+          _id: productId,
+          createdAt: Date.now(),
+          name: 'Purple Pant',
+          category: 'Pant',
+          price: 100,
+          currency: 'euro',
+          stock: 30,
+        },
+      ];
+      const requestedProduct = [
+        {
+          productId,
+          stock: 8,
+        },
+      ];
+      const expectedProducts = [
+        {
+          name: 'Purple Pant',
+          category: 'Pant',
+          price: 100,
+          currency: 'euro',
+          stock: 8,
+        },
+      ];
+      const req = { products: requestedProduct };
+
+      await models.product.create(newProducts);
+
+      const res = await request(appInstance.app)
+        .post('/validateStock')
+        .send(req);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        success: true,
+        data: { validatedProducts: expectedProducts, unvalidatedProducts: [] },
+      });
+
+      await models.product.deleteMany({ _id: productId });
+    });
+
+    it('should partialy retrieve product stock succesfuly and errors', async () => {
+      const productId1 = new Types.ObjectId().toHexString();
+      const productId2 = new Types.ObjectId().toHexString();
+
+      const newProducts = [
+        {
+          _id: productId1,
+          createdAt: Date.now(),
+          name: 'Purple Pant',
+          category: 'Pant',
+          price: 100,
+          currency: 'euro',
+          stock: 100,
+        },
+        {
+          _id: productId2,
+          createdAt: Date.now(),
+          name: 'White Pant',
+          category: 'Pant',
+          price: 10,
+          currency: 'euro',
+          stock: 5,
+        },
+      ];
+      const requestedProduct = [
+        {
+          productId: productId1,
+          stock: 50,
+        },
+        {
+          productId: productId2,
+          stock: 20,
+        },
+      ];
+      const expectedValidatedProducts = [
+        {
+          name: 'Purple Pant',
+          category: 'Pant',
+          price: 100,
+          currency: 'euro',
+          stock: 50,
+        },
+      ];
+      const expectedUnvalidatedProducts = [
+        {
+          requestedProduct: {
+            productId: productId2,
+            stock: 20,
+          },
+          reason: 'INSUFFICIENT_STOCK',
+        },
+      ];
+      const req = { products: requestedProduct };
+
+      await models.product.create(newProducts);
+
+      const res = await request(appInstance.app)
+        .post('/validateStock')
+        .send(req);
+
+      expect(res.status).toBe(207);
+      expect(res.body).toMatchObject({
+        success: true,
+        data: {
+          validatedProducts: expectedValidatedProducts,
+          unvalidatedProducts: expectedUnvalidatedProducts,
+        },
+      });
+
+      await models.product.deleteMany({ _id: [productId1, productId2] });
+    });
+
+    it('should fail to retrieve product stock for "INSUFFICIENT_STOCK" and skip dupplicate product id request', async () => {
+      const productId1 = new Types.ObjectId().toHexString();
+
+      const newProducts = [
+        {
+          _id: productId1,
+          createdAt: Date.now(),
+          name: 'Purple Pant',
+          category: 'Pant',
+          price: 100,
+          currency: 'euro',
+          stock: 200,
+        },
+      ];
+      const requestedProduct = [
+        {
+          productId: productId1,
+          stock: 250,
+        },
+        {
+          productId: productId1,
+          stock: 50,
+        },
+      ];
+
+      const expectedUnvalidatedProducts = [
+        {
+          requestedProduct: {
+            productId: productId1,
+            stock: 250,
+          },
+          reason: 'INSUFFICIENT_STOCK',
+        },
+      ];
+      const req = { products: requestedProduct };
+
+      await models.product.create(newProducts);
+
+      const res = await request(appInstance.app)
+        .post('/validateStock')
+        .send(req);
+
+      console.log(res.body);
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.meta.failed).toMatchObject({
+        ...expectedUnvalidatedProducts,
+      });
+
+      await models.product.deleteMany({ _id: [productId1] });
+    });
+  });
 });
