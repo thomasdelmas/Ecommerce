@@ -1,4 +1,8 @@
-import { CreateProductsPayload, IProduct } from '../product/product.types';
+import {
+  CreateProductsPayload,
+  IProduct,
+  StockValidationObj,
+} from '../product/product.types';
 
 export type ServiceResponse<T = any> =
   | { success: true; data: T }
@@ -15,4 +19,12 @@ export interface getProductWithIdSuccessData {
 
 export interface getProductsWithFilterSuccessData {
   products: IProduct[];
+}
+
+export interface ValidateStockSuccessData {
+  validatedProducts: IProduct[];
+  unvalidatedProducts: {
+    requestedProduct: StockValidationObj;
+    reason: string;
+  }[];
 }

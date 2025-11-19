@@ -5,6 +5,7 @@ import type {
   IProductDBRepository,
   IProductFilter,
   IProductService,
+  StockValidationObj,
 } from './product.types';
 import sha1 from 'sha1';
 
@@ -99,6 +100,61 @@ class ProductService implements IProductService {
     }
 
     return filteredProducts;
+  }
+
+  async validateProductStock(inputs: StockValidationObj[]) {
+    const validatedProducts: IProduct[] = [];
+    const unvalidatedProducts: {
+      requestedProduct: StockValidationObj;
+      reason: string;
+    }[] = [];
+
+    const sanitizeInputs: StockValidationObj[] = [];
+    inputs.forEach((input) => {
+      if (
+        !sanitizeInputs.some(
+          (sanInput) => sanInput.productId === input.productId,
+        )
+      ) {
+        sanitizeInputs.push(input);
+      }
+    });
+
+    const productIds = sanitizeInputs.map((input) => input.productId);
+    const productsInDB =
+      await this.productDBRepository.getProductsById(productIds);
+
+    sanitizeInputs.forEach((reqProd) => {
+      const matchingDBProduct = productsInDB.find(
+        (dbProd) => reqProd.productId === dbProd.id,
+      );
+      if (reqProd.stock <= 0) {
+        unvalidatedProducts.push({
+          requestedProduct: reqProd,
+          reason: 'INVALID_STOCK_REQUEST',
+        });
+      } else if (!matchingDBProduct) {
+        unvalidatedProducts.push({
+          requestedProduct: reqProd,
+          reason: 'PRODUCT_NOT_FOUND',
+        });
+      } else {
+        const stockDiff = matchingDBProduct.stock - reqProd.stock;
+        if (stockDiff < 0) {
+          unvalidatedProducts.push({
+            requestedProduct: reqProd,
+            reason: 'INSUFFICIENT_STOCK',
+          });
+        } else {
+          validatedProducts.push({
+            ...matchingDBProduct,
+            stock: reqProd.stock,
+          });
+        }
+      }
+    });
+
+    return { validatedProducts, unvalidatedProducts };
   }
 }
 

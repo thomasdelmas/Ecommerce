@@ -1,5 +1,5 @@
 import { AppError } from '../errors/appError.js';
-import { CreateProductsPayload } from './product.types.js';
+import { CreateProductsPayload, StockValidationObj } from './product.types.js';
 
 export const Errors = {
   NoProductCreated: (
@@ -21,6 +21,15 @@ export const Errors = {
     new AppError('Product not found', {
       statusCode: 404,
       code: 'PRODUCT_NOT_FOUND',
+    }),
+
+  ProductsNotValidated: (
+    failed: { requestedProduct: StockValidationObj; reason: string }[],
+  ) =>
+    new AppError('Failed to validate products', {
+      statusCode: 400,
+      code: 'PRODUCTS_VALIDATION_FAILED',
+      meta: { failed },
     }),
 
   Forbidden: () =>

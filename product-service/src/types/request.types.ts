@@ -1,6 +1,7 @@
 import {
   CreateProductsPayload,
   IProductFilter,
+  StockValidationObj,
 } from '../product/product.types';
 
 export interface CreateProductsRequestBody {
@@ -25,3 +26,7 @@ export interface GetProductsWithFilteredQuery
   extends GetProductsWithFilterQuery {
   filteredQuery?: IProductFilter;
 }
+
+export type ValidateStockRequestBody = {
+  products: StockValidationObj[];
+};

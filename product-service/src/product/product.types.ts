@@ -43,9 +43,15 @@ type CreateProductsPayloadOmit = 'createdAt' | 'currency';
 export interface CreateProductsPayload
   extends Omit<IProductCreation, CreateProductsPayloadOmit> {}
 
+export type StockValidationObj = {
+  productId: string;
+  stock: number;
+};
+
 export type IProductDBRepository = {
   createProducts: (products: IProductCreation[]) => Promise<IProduct[]>;
   getProductByName: (name: string) => Promise<IProduct | null>;
+  getProductsById: (ids: string[]) => Promise<IProduct[]>;
   getProductById: (id: string) => Promise<IProduct | null>;
   getProductsWithFilter: (
     filter: IProductFilter,
@@ -70,6 +76,13 @@ export type IProductService = {
     page: number,
     productPerPage: number,
   ) => Promise<IProduct[]>;
+  validateProductStock: (inputs: StockValidationObj[]) => Promise<{
+    validatedProducts: IProduct[];
+    unvalidatedProducts: {
+      requestedProduct: StockValidationObj;
+      reason: string;
+    }[];
+  }>;
 };
 
 export type IProductController = {

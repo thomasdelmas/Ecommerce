@@ -25,9 +25,16 @@ class ProductDBRepository implements IProductDBRepository {
     return product ? this.toIProduct(product) : null;
   }
 
+  async getProductsById(ids: string[]) {
+    const docs = await this.db.find({ _id: { $in: ids } }).exec();
+    return docs.map((doc: HydratedDocument<IProductSchema>) =>
+      this.toIProduct(doc),
+    );
+  }
+
   async getProductById(id: string) {
-    const product = await this.db.findOne({ _id: id }).exec();
-    return product ? this.toIProduct(product) : null;
+    const res = await this.getProductsById([id]);
+    return res.length > 0 ? res[0] : null;
   }
 
   applyRangeFilter(field: string, filter: RangeFilter<number>, query: any) {

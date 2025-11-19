@@ -4,6 +4,7 @@ import {
   CreateProductsRequestBody,
   GetProductsWithFilteredQuery,
   GetProductWithIdParams,
+  ValidateStockRequestBody,
 } from '../types/request.types';
 import { Errors } from './product.error.js';
 import {
@@ -11,6 +12,7 @@ import {
   getProductsWithFilterSuccessData,
   getProductWithIdSuccessData,
   ServiceResponse,
+  ValidateStockSuccessData,
 } from '../types/api.types';
 
 class ProductController implements IProductController {
@@ -87,6 +89,35 @@ class ProductController implements IProductController {
     res.status(200).json({
       success: true,
       data: { products: filteredProducts },
+    });
+  }
+
+  async validateStock(
+    req: Request<{}, {}, ValidateStockRequestBody>,
+    res: Response<ServiceResponse<ValidateStockSuccessData>>,
+  ): Promise<any> {
+    const { products } = req.body;
+    let returnStatus;
+
+    const stockValidationResult =
+      await this.productService.validateProductStock(products);
+
+    const successCount = stockValidationResult.validatedProducts.length;
+    const failCount = stockValidationResult.unvalidatedProducts.length;
+
+    if (successCount && failCount) {
+      returnStatus = 207;
+    } else if (!failCount) {
+      returnStatus = 200;
+    } else {
+      throw Errors.ProductsNotValidated(
+        stockValidationResult.unvalidatedProducts,
+      );
+    }
+
+    res.status(returnStatus).json({
+      success: true,
+      data: { ...stockValidationResult },
     });
   }
 }
