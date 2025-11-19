@@ -118,7 +118,7 @@ describe('UserRepository', () => {
   });
 
   describe('getUserById', () => {
-    it('should call db.findOne with username filter and return user', async () => {
+    it('should call db.find with username filter and return user', async () => {
       const id = 'ffffffffffffffffffffffff';
       const user = {
         username: 'user_test',
@@ -144,20 +144,20 @@ describe('UserRepository', () => {
       });
     });
 
-    it('should return null if db.findOne returns null', async () => {
+    it('should return null if db.find returns empty array', async () => {
       const username = 'nonexistent';
-      dbMock.findOne.mockResolvedValue(null);
+      dbMock.find.mockResolvedValue([]);
 
-      const result = await repository.getUserByUsername(username);
+      const result = await repository.getUserById(username);
       expect(result).toBe(null);
     });
 
-    it('should propagate errors if db.findOne rejects', async () => {
+    it('should propagate errors if db.find rejects', async () => {
       const username = 'erroruser';
       const error = new Error('DB error');
-      dbMock.findOne.mockRejectedValue(error);
+      dbMock.find.mockRejectedValue(error);
 
-      await expect(repository.getUserByUsername(username)).rejects.toThrow(
+      await expect(repository.getUserById(username)).rejects.toThrow(
         'DB error',
       );
     });
