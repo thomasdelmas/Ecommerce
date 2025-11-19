@@ -14,6 +14,7 @@ import {
   createProductsValidation,
   getProductsValidation,
   getProductValidation,
+  validateStockValidation,
 } from './product/product.validator.js';
 import { models } from './models/init.js';
 import CacheClient from './clients/cache.js';
@@ -25,6 +26,7 @@ import {
   CreateProductsRequestBody,
   GetProductsWithFilterQuery,
   GetProductWithIdParams,
+  ValidateStockRequestBody,
 } from './types/request.types.js';
 import { swaggerSpec } from './docs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
@@ -33,6 +35,7 @@ import {
   getProductsWithFilterSuccessData,
   getProductWithIdSuccessData,
   ServiceResponse,
+  ValidateStockSuccessData,
 } from './types/api.types.js';
 
 class App {
@@ -220,6 +223,44 @@ class App {
           ServiceResponse<getProductsWithFilterSuccessData>
         >,
       ) => this.productController.getProductsWithFilter(req, res),
+    );
+
+    /**
+     * @openapi
+     * /validateStock:
+     *   post:
+     *     tags:
+     *       - Product
+     *     summary: Products stock validation
+     *     requestBody:
+     *       description: ID and stock of products
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             $ref: "#/components/schemas/ValidateStockRequest"
+     *     responses:
+     *       200:
+     *         description: All products in stock
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/AllProductsInStockResponse"
+     *       400:
+     *         description: Insufficient Stock for requested products
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/InsufficientStockResponse"
+     */
+    this.app.post(
+      '/validateStock',
+      validateStockValidation,
+      validateRequest,
+      (
+        req: express.Request<{}, {}, ValidateStockRequestBody>,
+        res: express.Response<ServiceResponse<ValidateStockSuccessData>>,
+      ) => this.productController.validateStock(req, res),
     );
 
     // HealthCheck endpoint

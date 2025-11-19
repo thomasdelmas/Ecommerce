@@ -77,3 +77,16 @@ export const getProductsValidation: ValidationChain[] = [
     .isString()
     .withMessage('Currency must be a string'),
 ];
+
+export const validateStockValidation: ValidationChain[] = [
+  body('products.*.productId')
+    .exists()
+    .withMessage('Product id is required')
+    .matches(/^[0-9a-fA-F]{24}$/)
+    .withMessage('Product id must be 24 characters long and alphanumeric'),
+  body('products.*.stock')
+    .notEmpty()
+    .withMessage('Product stock is required')
+    .isInt({ min: 1 })
+    .withMessage('Product stock must be an integer greater than 0'),
+];
