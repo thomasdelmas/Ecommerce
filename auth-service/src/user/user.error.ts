@@ -1,4 +1,4 @@
-import { AppError } from '../errors/appError';
+import { AppError } from '../errors/appError.js';
 
 export const Errors = {
   DeletionFailed: () =>
